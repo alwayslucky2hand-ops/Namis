@@ -3147,6 +3147,13 @@
           return;
         }
 
+        const cartRows = getActiveCartRows();
+        const totalAmount = cartRows.reduce((acc, r) => acc + Number(r.subtotal || 0), 0);
+        if (totalAmount <= 0) {
+          setInlineNotice('checkoutStatusNotice', '購物車結帳金額異常，請重新確認商品', 'red');
+          return;
+        }
+
         
         safeSetStorage('YZX_DEF_RECIPIENT_' + state.currentMember.memberId, JSON.stringify({
           recipientName,
@@ -3157,7 +3164,7 @@
 
         const btn = document.getElementById('submitCompleteOrderBtn');
         try {
-          const res = await runWithButtonProgress(btn, 'checkoutStatusNotice', '導向付款', () =>
+          const res = await runWithButtonProgress(btn, 'checkoutStatusNotice', '建立金流訂單', () =>
             callBackend('submitCheckoutOrder', {
               memberId: state.currentMember.memberId,
               recipientName,
@@ -3166,24 +3173,37 @@
               deliveryTimeSlot,
               note,
               atmLast5: '',
-              payMethod: 'PayUni線上支付'
+              payMethod: 'PayUni線上支付',
+              totalAmount: totalAmount
             })
           );
           if (res.status !== 'success') {
             setInlineNotice('checkoutStatusNotice', res.message || '訂單提交失敗', 'red');
           } else {
-            if (res.data.member) state.currentMember = res.data.member;
-            state.shelfProducts = res.data.shelfProducts || state.shelfProducts;
-            state.orders = res.data.orders || [];
-            state.returns = res.data.returns || [];
-            document.getElementById('cartDrawerBackdrop').classList.add('hidden');
+            const resData = res.data;
+            if (resData.member) state.currentMember = resData.member;
+            state.shelfProducts = resData.shelfProducts || state.shelfProducts;
+            state.orders = resData.orders || [];
+            state.returns = resData.returns || [];
             updateMemberBadges();
             renderAllViews();
-            switchMainView('orders');
-            if (res.data.upgradedToVip) {
-              showToast(`訂單 ${res.data.orderNo} 成立！恭喜單筆滿 NT$ 28,060 已自動為您晉升 VIP 會員！`, 'success');
+
+            if (resData.url) {
+              const displayTotal = Number(resData.totalAmount || totalAmount).toLocaleString();
+              alert(`訂單建立成功！\n單號：${resData.orderNo}\n結帳總金額：NT$ ${displayTotal}\n即將為您跳轉至 PayUni 金流付款頁面...`);
+              if (isGasNativeEnv() && window.top) {
+                window.top.location.href = resData.url;
+              } else {
+                window.location.href = resData.url;
+              }
             } else {
-              showToast(`訂單成立！訂單編號：${res.data.orderNo}`, 'success');
+              document.getElementById('cartDrawerBackdrop').classList.add('hidden');
+              switchMainView('orders');
+              if (resData.upgradedToVip) {
+                showToast(`訂單 ${resData.orderNo} 成立！恭喜單筆滿 NT$ 28,060 已自動為您晉升 VIP 會員！`, 'success');
+              } else {
+                showToast(`訂單成立！訂單編號：${resData.orderNo}`, 'success');
+              }
             }
           }
         } catch (err) {
