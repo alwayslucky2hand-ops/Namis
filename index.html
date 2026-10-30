@@ -283,7 +283,6 @@
     
     <div class="pb-6 border-b border-[#BFDBFE] flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <div id="storeActiveCategoryLabel" class="text-xs tracking-[0.16em] text-[#4B5563] mb-1 font-medium">全類別</div>
         <h2 class="text-2xl sm:text-3xl font-medium tracking-[0.04em] text-[#1F2937]">
           妍之馨專櫃選品
         </h2>
@@ -2097,7 +2096,8 @@
         btn.textContent = cat === 'ALL' ? ('全類別 (' + count + ')') : (cat + ' (' + count + ')');
         btn.addEventListener('click', function() {
           state.selectedCategory = cat;
-          document.getElementById('storeActiveCategoryLabel').textContent = cat === 'ALL' ? '全類別' : (cat + ' 專櫃');
+          const catLabel = document.getElementById('storeActiveCategoryLabel');
+          if (catLabel) catLabel.textContent = '';
           renderCategoryTabs();
           renderProductGrid();
         });
