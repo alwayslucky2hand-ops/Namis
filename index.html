@@ -662,9 +662,36 @@
 
       
       <form id="checkoutForm" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5">
-        <div class="p-3.5 hairline-border bg-[#FAFAFA] text-xs leading-relaxed msg-black flex items-start space-x-2">
-          <span class="w-1.5 h-1.5 bg-[#111111] shrink-0 mt-1.5"></span>
-          <span>本專櫃採用 PayUni 統一金流安全防護，點擊下方「前往付款」將直接進入金流頁面完成線上付款。</span>
+        
+        <div class="space-y-3 p-4 bg-white border border-[#E5E7EB] rounded-sm">
+          <label class="block text-xs font-semibold text-[#262626]">選擇付款方式 *</label>
+          <div class="space-y-2 text-xs">
+            <label class="flex items-center space-x-3 p-2.5 border border-[#262626] bg-[#FAFAFA] cursor-pointer rounded-sm">
+              <input type="radio" name="checkoutPayMethod" value="信用卡支付" checked class="accent-[#1D4ED8]" />
+              <span class="font-medium text-[#262626]">信用卡支付（一次付清）</span>
+            </label>
+            <label class="flex items-center space-x-3 p-2.5 border border-[#E5E7EB] bg-white hover:border-[#262626] cursor-pointer rounded-sm transition-colors">
+              <input type="radio" name="checkoutPayMethod" value="Apple Pay" class="accent-[#1D4ED8]" />
+              <span class="font-medium text-[#262626]">Apple Pay</span>
+            </label>
+            <label class="flex items-center space-x-3 p-2.5 border border-[#E5E7EB] bg-white hover:border-[#262626] cursor-pointer rounded-sm transition-colors">
+              <input type="radio" name="checkoutPayMethod" value="Google Pay" class="accent-[#1D4ED8]" />
+              <span class="font-medium text-[#262626]">Google Pay</span>
+            </label>
+            <label class="flex items-center space-x-3 p-2.5 border border-[#E5E7EB] bg-white hover:border-[#262626] cursor-pointer rounded-sm transition-colors">
+              <input type="radio" name="checkoutPayMethod" value="Samsung Pay" class="accent-[#1D4ED8]" />
+              <span class="font-medium text-[#262626]">Samsung Pay</span>
+            </label>
+            <label class="flex items-center space-x-3 p-2.5 border border-[#E5E7EB] bg-white hover:border-[#262626] cursor-pointer rounded-sm transition-colors">
+              <input type="radio" name="checkoutPayMethod" value="ATM轉帳" class="accent-[#1D4ED8]" />
+              <span class="font-medium text-[#262626]">ATM轉帳</span>
+            </label>
+          </div>
+          
+          <div id="checkoutAtmField" class="hidden pt-2 border-t border-[#E5E7EB] space-y-1">
+            <label class="block text-[11px] text-[#6B7280]">匯款帳號後五碼（選填）</label>
+            <input type="text" id="shipAtmLast5" maxlength="5" placeholder="例如：12345" class="input-minimal font-mono text-xs" />
+          </div>
         </div>
 
         <div class="space-y-3.5">
@@ -763,7 +790,7 @@
         <input type="hidden" id="returnOrderRowId" />
         <input type="hidden" id="returnOrderNo" />
         <div class="p-3 bg-[#FAFAFA] hairline-border text-xs space-y-1">
-          <div>訂單編號：<span id="returnModalOrderNoText" class="font-mono font-medium">SF-...</span></div>
+          <div>訂單編號：<span id="returnModalOrderNoText" class="font-mono font-medium">BUY-...</span></div>
           <div>申請商品：<span id="returnModalItemNameText" class="font-medium">-</span></div>
         </div>
 
@@ -1117,13 +1144,13 @@
           payTime: '2026/10/19-14:22:05',
           payMethod: 'ATM轉帳',
           completeTime: '2026/10/19-14:22:05',
-          orderNo: 'SF-20261019142205'
+          orderNo: 'BUY-20261019142205'
         }
       ],
       returns: [
         {
           _rowId: 2,
-          orderNo: 'SF-20261019142205',
+          orderNo: 'BUY-20261019142205',
           memberId: 'MEM-20261016090000',
           memberType: 'VIP會員',
           memberName: '陳妍希',
@@ -1595,7 +1622,7 @@
           return { status: 'error', message: '目前購物車內沒有待結帳商品' };
         }
 
-        const orderNo = `SF-${ts.compact}`;
+        const orderNo = `BUY-${ts.compact}`;
         const combinedNote = [
           payload.note || '',
           payload.atmLast5 ? `匯款後五碼:${payload.atmLast5}` : ''
@@ -3380,6 +3407,27 @@
       document.getElementById('cartStep1Tab').addEventListener('click', () => switchCartDrawerStep(1));
       document.getElementById('cartStep2Tab').addEventListener('click', () => switchCartDrawerStep(2));
       document.getElementById('proceedToCheckoutBtn').addEventListener('click', () => switchCartDrawerStep(2));
+
+      
+      document.querySelectorAll('input[name="checkoutPayMethod"]').forEach(function(radio) {
+        radio.addEventListener('change', function(e) {
+          document.querySelectorAll('input[name="checkoutPayMethod"]').forEach(function(r) {
+            const parentLabel = r.closest('label');
+            if (parentLabel) {
+              if (r.checked) {
+                parentLabel.className = 'flex items-center space-x-3 p-2.5 border border-[#262626] bg-[#FAFAFA] cursor-pointer rounded-sm';
+              } else {
+                parentLabel.className = 'flex items-center space-x-3 p-2.5 border border-[#E5E7EB] bg-white hover:border-[#262626] cursor-pointer rounded-sm transition-colors';
+              }
+            }
+          });
+          const atmBox = document.getElementById('checkoutAtmField');
+          if (atmBox) {
+            if (e.target.value === 'ATM轉帳') atmBox.classList.remove('hidden');
+            else atmBox.classList.add('hidden');
+          }
+        });
+      });
       document.getElementById('backToCartListBtn').addEventListener('click', () => switchCartDrawerStep(1));
       document.getElementById('fillMemberDefaultRecipientBtn').addEventListener('click', () => {
         fillDefaultRecipientInfo();
@@ -3414,6 +3462,13 @@
           deliveryTimeSlot
         }));
 
+        
+        const selectedPayRadio = document.querySelector('input[name="checkoutPayMethod"]:checked');
+        const chosenPayMethod = selectedPayRadio ? selectedPayRadio.value : '信用卡支付';
+        const atmLast5Val = (document.getElementById('shipAtmLast5') && chosenPayMethod === 'ATM轉帳')
+          ? document.getElementById('shipAtmLast5').value.trim()
+          : '';
+
         const btn = document.getElementById('submitCompleteOrderBtn');
         try {
           const res = await runWithButtonProgress(btn, 'checkoutStatusNotice', '建立金流訂單', () =>
@@ -3424,8 +3479,8 @@
               recipientAddress,
               deliveryTimeSlot,
               note,
-              atmLast5: '',
-              payMethod: 'PayUni線上支付',
+              atmLast5: atmLast5Val,
+              payMethod: chosenPayMethod, 
               totalAmount: totalAmount
             })
           );
