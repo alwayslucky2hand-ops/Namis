@@ -674,8 +674,33 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs text-[#4B5563] mb-1">收件人地址 *</label>
+          
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs text-[#4B5563] font-medium">配送方式與地址 *</label>
+              
+              <div class="flex items-center space-x-1.5 text-[11px]">
+                <button type="button" id="deliveryModeHome" class="px-2.5 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors">宅配到府</button>
+                <button type="button" id="deliveryMode711" class="px-2.5 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors">7-11 門市取件</button>
+              </div>
+            </div>
+
+            
+            <div id="cvs711HelperBox" class="hidden p-3 bg-white border border-[#BFDBFE] space-y-2 rounded-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-[#1D4ED8] flex items-center space-x-1">
+                  <span>🏪</span>
+                  <span>7-ELEVEN 取件門市選擇</span>
+                </span>
+                <button type="button" id="open711OfficialMapBtn" class="px-2.5 py-1 text-[11px] bg-white border border-[#1D4ED8] text-[#1D4ED8] hover:bg-[#1D4ED8] hover:text-white transition-colors rounded-sm">
+                  開啟 7-11 官方電子地圖 ↗
+                </button>
+              </div>
+              <p class="text-[11px] text-[#6B7280]">
+                點擊上方開啟地圖查詢鄰近門市，或於下方輸入<strong>「門市店名」</strong>（例如：鑫泰門市）或<strong>「6碼店號」</strong>即可自動帶入！
+              </p>
+            </div>
+
             <input type="text" id="shipRecipientAddress" required placeholder="完整縣市、行政區、街道門牌樓層" class="input-minimal" />
           </div>
 
@@ -3372,6 +3397,42 @@
         fillDefaultRecipientInfo();
         setInlineNotice('checkoutStatusNotice', '已為您自動帶入上一次最新收貨資訊', 'green');
       });
+
+      
+      const btnHome = document.getElementById('deliveryModeHome');
+      const btn711 = document.getElementById('deliveryMode711');
+      const cvsBox = document.getElementById('cvs711HelperBox');
+      const addrInput = document.getElementById('shipRecipientAddress');
+      const timeSlotSelect = document.getElementById('shipDeliveryTime');
+
+      if (btnHome && btn711 && addrInput) {
+        btnHome.addEventListener('click', function() {
+          btnHome.className = 'px-2.5 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
+          btn711.className = 'px-2.5 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          cvsBox.classList.add('hidden');
+          addrInput.placeholder = '完整縣市、行政區、街道門牌樓層';
+          if (timeSlotSelect) timeSlotSelect.disabled = false;
+        });
+
+        btn711.addEventListener('click', function() {
+          btn711.className = 'px-2.5 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
+          btnHome.className = 'px-2.5 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          cvsBox.classList.remove('hidden');
+          addrInput.placeholder = '例如：7-11 鑫泰門市 (店號: 218451) 台北市信義區...';
+          
+          if (timeSlotSelect) {
+            timeSlotSelect.value = '09:00-11:30';
+          }
+        });
+
+        
+        const mapBtn = document.getElementById('open711OfficialMapBtn');
+        if (mapBtn) {
+          mapBtn.addEventListener('click', function() {
+            window.open('https://emap.pcsc.com.tw/', '711_emap', 'width=980,height=680,scrollbars=yes,resizable=yes');
+          });
+        }
+      }
 
       
       document.getElementById('submitCompleteOrderBtn').addEventListener('click', async () => {
