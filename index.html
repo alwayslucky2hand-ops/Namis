@@ -378,9 +378,18 @@
               <span class="text-[#666666]">電子郵件</span>
               <span id="profileMemberEmail" class="font-mono text-[#111111]">-</span>
             </div>
-            <div class="flex justify-between py-1">
+            <div class="flex justify-between py-1 hairline-b">
               <span class="text-[#666666]">會員生日</span>
               <span id="profileMemberBirthdayText" class="font-mono text-[#111111]">-</span>
+            </div>
+            
+            <div id="profileVipStartRow" class="hidden justify-between py-1 hairline-b">
+              <span class="text-[#666666]">轉 VIP 時間</span>
+              <span id="profileMemberVipStart" class="font-mono text-[#111111]">-</span>
+            </div>
+            <div id="profileVipExpireRow" class="hidden justify-between py-1">
+              <span class="text-[#666666]">VIP 到期時間</span>
+              <span id="profileMemberVipExpire" class="font-mono font-medium text-[#15803D]">-</span>
             </div>
           </div>
         </div>
@@ -679,29 +688,30 @@
             <div class="flex items-center justify-between">
               <label class="block text-xs text-[#4B5563] font-medium">配送方式與地址 *</label>
               
-              <div class="flex items-center space-x-1.5 text-[11px]">
-                <button type="button" id="deliveryModeHome" class="px-2.5 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors">宅配到府</button>
-                <button type="button" id="deliveryMode711" class="px-2.5 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors">7-11 門市取件</button>
+              <div class="flex items-center space-x-1 text-[11px]">
+                <button type="button" id="deliveryModeHome" class="px-2 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors">宅配到府</button>
+                <button type="button" id="deliveryMode711" class="px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors">7-11 門市取件</button>
+                <button type="button" id="deliveryModeStore" class="px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors">到店取貨</button>
               </div>
             </div>
 
             
-            <div id="cvs711HelperBox" class="hidden p-3 bg-white border border-[#BFDBFE] space-y-2 rounded-sm">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-[#1D4ED8] flex items-center space-x-1">
-                  <span>🏪</span>
-                  <span>7-ELEVEN 取件門市選擇</span>
-                </span>
-                <button type="button" id="open711OfficialMapBtn" class="px-2.5 py-1 text-[11px] bg-white border border-[#1D4ED8] text-[#1D4ED8] hover:bg-[#1D4ED8] hover:text-white transition-colors rounded-sm">
-                  開啟 7-11 官方電子地圖 ↗
-                </button>
-              </div>
-              <p class="text-[11px] text-[#6B7280]">
-                點擊上方開啟地圖查詢鄰近門市，或於下方輸入<strong>「門市店名」</strong>（例如：鑫泰門市）或<strong>「6碼店號」</strong>即可自動帶入！
+            <div id="storePickupOptionBox" class="hidden p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-sm space-y-1.5">
+              <label class="flex items-center space-x-2 cursor-pointer select-none">
+                <input type="checkbox" id="payOnSiteCheckbox" class="w-4 h-4 text-[#1D4ED8] border-[#94A3B8] rounded cursor-pointer" />
+                <span class="text-xs font-medium text-[#1E293B]">勾選是否「現場付款」（至專櫃門市取貨時再行付款）</span>
+              </label>
+              <p class="text-[11px] text-[#64748B] pl-6 leading-relaxed">
+                若勾選，點擊下方「下訂」即可直接成立訂單；若未勾選，將透過線上金流完成付款。
               </p>
             </div>
 
-            <input type="text" id="shipRecipientAddress" required placeholder="完整縣市、行政區、街道門牌樓層" class="input-minimal" />
+            
+            <div class="relative">
+              <input type="text" id="shipRecipientAddress" required placeholder="完整縣市、行政區、街道門牌樓層" class="input-minimal" autocomplete="off" />
+              
+              <div id="shipAddressDropdownList" class="hidden absolute left-0 right-0 top-full mt-1 z-30 max-h-56 overflow-y-auto custom-scrollbar border border-[#BFDBFE] bg-white divide-y divide-[#F1F5F9] shadow-xl rounded-sm"></div>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -722,7 +732,7 @@
         
         <div class="p-3.5 bg-white border border-[#BFDBFE] text-xs leading-relaxed text-[#262626] flex items-center space-x-2.5 rounded-sm shadow-sm">
           <span class="w-2 h-2 rounded-full bg-[#1D4ED8] shrink-0"></span>
-          <span>點擊下方「前往付款」將跳轉至安全金流頁進行付款</span>
+          <span id="checkoutPaymentHintText">點擊下方「前往付款」將跳轉至安全金流頁進行付款</span>
         </div>
       </form>
 
@@ -737,9 +747,17 @@
             <span>會員禮遇</span>
             <span id="cartSummaryMemberTier" class="text-[#111111]">一般會員標準價</span>
           </div>
+          <div class="flex justify-between text-[#666666]">
+            <span>商品小計</span>
+            <span id="cartSummarySubtotal" class="font-mono text-[#111111]">NT$ 0</span>
+          </div>
+          <div class="flex justify-between text-[#666666]">
+            <span>配送運費</span>
+            <span id="cartSummaryShipping" class="font-mono font-medium text-[#111111]">NT$ 0</span>
+          </div>
           <div class="flex justify-between text-sm font-medium text-[#111111] pt-2 hairline-t">
             <span>應付總計</span>
-            <span id="cartSummaryTotalPrice" class="text-lg font-mono">NT$ 0</span>
+            <span id="cartSummaryTotalPrice" class="text-lg font-mono text-[#1D4ED8]">NT$ 0</span>
           </div>
         </div>
 
@@ -826,7 +844,110 @@
     const SPREADSHEET_ID = '1VLApERacAm7TBVV9RfzVG2jIndFgfW_eMq1GfP_h7Wk';
     let GAS_WEB_URL = 'https://script.google.com/macros/s/AKfycbzKJa6UhXKd3gjgTAgRjsFQYanYmIApqViPQoktFiwXmfbTmZY11NqM1UEyKEo5MKKD/exec';
     const LIFF_ID = ''; 
-    const VIP_UPGRADE_THRESHOLD = 28060; 
+    const VIP_UPGRADE_THRESHOLD = 28000; 
+    const VIP_RENEWAL_THRESHOLD = 28000; 
+
+    
+    function calculateVipValidity(member, orders) {
+      if (!member || member.memberType !== 'VIP會員' || !member.vipTime) {
+        return null;
+      }
+
+      
+      const rawVip = String(member.vipTime).trim();
+      let startTimeMs = NaN;
+      const mMatch = rawVip.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?:[T\s-](\d{1,2}):(\d{1,2}):(\d{1,2}))?/);
+      let initialStart;
+      if (mMatch) {
+        initialStart = new Date(
+          Number(mMatch[1]),
+          Number(mMatch[2]) - 1,
+          Number(mMatch[3]),
+          Number(mMatch[4] || 0),
+          Number(mMatch[5] || 0),
+          Number(mMatch[6] || 0)
+        );
+      } else {
+        initialStart = new Date(rawVip);
+      }
+      if (isNaN(initialStart.getTime())) return null;
+
+      const pad = function(n) { return String(n).padStart(2, '0'); };
+      const formatDateStr = function(d) {
+        return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate());
+      };
+
+      
+      function calcPeriodEnd(startDate) {
+        const end = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 59, 59, 999);
+        end.setFullYear(end.getFullYear() + 1);
+        end.setDate(end.getDate() - 1);
+        return end;
+      }
+
+      let currentPeriodStart = new Date(initialStart.getFullYear(), initialStart.getMonth(), initialStart.getDate(), 0, 0, 0, 0);
+      let currentPeriodEnd = calcPeriodEnd(initialStart);
+      let totalRenewedYears = 0;
+      let activePeriodSpend = 0;
+
+      
+      const validOrders = (orders || []).filter(function(o) {
+        if (o.memberId !== member.memberId) return false;
+        const st = String(o.orderStatus || '').trim();
+        if (st === '選購' || st === '購物車' || st.includes('取消') || st.includes('退')) return false;
+        return true;
+      });
+
+      
+      let checking = true;
+      while (checking) {
+        const spendInCycle = validOrders.reduce(function(sum, o) {
+          const tRaw = String(o.completeTime || o.payTime || o.shopTime || '').trim();
+          let oTime = NaN;
+          const om = tRaw.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+          if (om) {
+            oTime = new Date(Number(om[1]), Number(om[2]) - 1, Number(om[3])).getTime();
+          } else {
+            oTime = new Date(tRaw).getTime();
+          }
+
+          if (!isNaN(oTime) && oTime >= currentPeriodStart.getTime() && oTime <= currentPeriodEnd.getTime()) {
+            return sum + Number(o.subtotal || 0);
+          }
+          return sum;
+        }, 0);
+
+        if (spendInCycle >= VIP_RENEWAL_THRESHOLD) {
+          totalRenewedYears += 1;
+          
+          currentPeriodStart = new Date(currentPeriodEnd.getTime() + 1000);
+          currentPeriodEnd = calcPeriodEnd(currentPeriodStart);
+          activePeriodSpend = 0;
+        } else {
+          activePeriodSpend = spendInCycle;
+          checking = false;
+        }
+      }
+
+      const now = new Date();
+      const diffMs = currentPeriodEnd.getTime() - now.getTime();
+      const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      
+      const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
+      const renewalDiff = Math.max(0, VIP_RENEWAL_THRESHOLD - activePeriodSpend);
+
+      return {
+        vipStartTime: formatDateStr(initialStart),
+        vipExpireDate: formatDateStr(currentPeriodEnd),
+        currentPeriodStartStr: formatDateStr(currentPeriodStart),
+        totalRenewedYears: totalRenewedYears,
+        isRenewed: totalRenewedYears > 0,
+        activePeriodSpend: activePeriodSpend,
+        renewalDiff: renewalDiff,
+        daysRemaining: daysRemaining,
+        isExpiringSoon: isExpiringSoon
+      };
+    }
 
     
     const GOOGLE_ITU_COUNTRIES = [
@@ -1908,6 +2029,22 @@
     }
 
     
+    const LINE_ICONS = {
+      truck: '<svg class="w-3.5 h-3.5 inline-block shrink-0 -mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+      crown: '<svg class="w-3.5 h-3.5 inline-block shrink-0 -mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l3 12h14l3-12-5 4-5-6-5 6-5-4z"/><path d="M4 20h16"/></svg>',
+      gift: '<svg class="w-3.5 h-3.5 inline-block shrink-0 -mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
+      check: '<svg class="w-3.5 h-3.5 inline-block shrink-0 -mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
+      alert: '<svg class="w-3.5 h-3.5 inline-block shrink-0 -mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    };
+
+    
+    function calculateShippingFee(subtotal, isBirthdayMonth) {
+      if (subtotal <= 0) return 0;
+      if (isBirthdayMonth) return 0;
+      return subtotal >= 5000 ? 0 : 150;
+    }
+
+    
     function renderVipAndBirthdayBanners() {
       const m = state.currentMember;
       if (!m) return;
@@ -1915,51 +2052,163 @@
       const cartRows = getActiveCartRows();
       const cartTotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
       const isVip = m.memberType === 'VIP會員';
-      const diff = Math.max(0, VIP_UPGRADE_THRESHOLD - cartTotal);
+      const vipThreshold = (typeof VIP_UPGRADE_THRESHOLD !== 'undefined') ? VIP_UPGRADE_THRESHOLD : 28000;
+      const diffVip = Math.max(0, vipThreshold - cartTotal);
 
+      
+      const currentMonth = new Date().getMonth() + 1;
+      const memberBirthMonth = getMemberBirthMonth(m);
+      const isBirthdayMonth = memberBirthMonth === currentMonth;
+
+      
       let vipText = '';
-      let vipTone = 'black';
+      const vipValidity = calculateVipValidity(m, state.orders);
       if (isVip) {
-        vipText = '👑 尊榮 VIP 會員：全館選品已為您自動套用專屬 85 折優惠價。';
-        vipTone = 'green';
-      } else if (diff === 0 && cartTotal > 0) {
-        vipText = '🎉 恭喜達成升等門檻！完成本筆結帳立即晉升尊榮 VIP，下次起全館享 85 折尊榮禮遇！';
-        vipTone = 'green';
+        if (vipValidity && vipValidity.isExpiringSoon && vipValidity.renewalDiff > 0) {
+          
+          vipText = LINE_ICONS.alert + ' <span class="text-[#B91C1C] font-semibold">VIP 到期提醒：將於 ' + vipValidity.vipExpireDate + ' 到期（剩 ' + vipValidity.daysRemaining + ' 天）！本期已累積消費 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，還差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + ' 即可完成自動順延續約 1 年！</span>';
+        } else if (vipValidity && vipValidity.isRenewed) {
+          
+          vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：累積已達標，已自動順延 1 年（累計續約 ' + vipValidity.totalRenewedYears + ' 年）！本期已累積 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，全館享 85 折。</span>';
+        } else if (vipValidity) {
+          
+          vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：全館享 85 折。本期累積消費 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，滿 NT$ 28,000（差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + '）自動順延續約 1 年。</span>';
+        } else {
+          vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員：全館商品已自動享有專屬 85 折優惠價。</span>';
+        }
+      } else if (diffVip === 0 && cartTotal > 0) {
+        vipText = LINE_ICONS.check + ' <span>結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！已達升等門檻。</span>';
       } else {
-        vipText = '✨ 差 NT$ ' + diff.toLocaleString() + ' 即可升等尊榮 VIP（下次起享 85 折）！多挑一款好物犒賞自己吧 🛒';
-        vipTone = 'black';
+        vipText = LINE_ICONS.crown + ' <span>結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！差 NT$ ' + diffVip.toLocaleString() + ' 即可升等。</span>';
       }
 
-      setInlineNotice('storeVipProgressNotice', vipText, vipTone);
-      setInlineNotice('drawerVipDiffBanner', vipText, vipTone);
-      setInlineNotice('memberCartVipDiffText', vipText, vipTone);
-      setInlineNotice('memberCenterVipNote', vipText, vipTone);
+      
+      let shippingText = '';
+      if (cartTotal <= 0) {
+        shippingText = LINE_ICONS.truck + ' <span>全館消費滿 NT$ 5,000 即享免運費（未達門檻加收 NT$ 150 運費）。</span>';
+      } else if (isBirthdayMonth) {
+        shippingText = LINE_ICONS.gift + ' <span>歡慶本月壽星：全單享專屬免運費禮遇（現省 NT$ 150）。</span>';
+      } else if (cartTotal >= 5000) {
+        shippingText = LINE_ICONS.check + ' <span>本筆已達 NT$ 5,000 免運門檻，享自動免運費優惠。</span>';
+      } else {
+        const diffShipping = 5000 - cartTotal;
+        shippingText = LINE_ICONS.truck + ' <span>差 NT$ ' + diffShipping.toLocaleString() + ' 即可享有免運費（目前運費 NT$ 150，滿 NT$ 5,000 免運）。</span>';
+      }
+
+      
+      let bdayGiftText = '';
+      if (isBirthdayMonth) {
+        bdayGiftText = cartTotal > 0
+          ? LINE_ICONS.gift + ' <span>壽星專屬禮遇：購物車已自動免費帶入【妍之馨年度限定尊榮生日禮】。</span>'
+          : LINE_ICONS.gift + ' <span>當月壽星福利：本月消費滿額即贈專屬生日禮與全月免運費。</span>';
+      }
+
+      
+      const combinedBannerHtml = 
+        '<div class="space-y-1 text-xs">' +
+          '<div class="flex items-center space-x-1.5 font-medium ' + (cartTotal >= 5000 || isBirthdayMonth ? 'text-[#15803D]' : 'text-[#1D4ED8]') + '">' +
+            shippingText +
+          '</div>' +
+          '<div class="flex items-center space-x-1.5 text-[#262626]">' +
+            vipText +
+          '</div>' +
+          (bdayGiftText ? '<div class="flex items-center space-x-1.5 text-[#15803D] font-medium">' + bdayGiftText + '</div>' : '') +
+        '</div>';
+
+      const storeNoticeEl = document.getElementById('storeVipProgressNotice');
+      const drawerNoticeEl = document.getElementById('drawerVipDiffBanner');
+      const memberCartNoticeEl = document.getElementById('memberCartVipDiffText');
+      const centerNoticeEl = document.getElementById('memberCenterVipNote');
+
+      if (storeNoticeEl) storeNoticeEl.innerHTML = combinedBannerHtml;
+      if (drawerNoticeEl) drawerNoticeEl.innerHTML = combinedBannerHtml;
+      if (memberCartNoticeEl) memberCartNoticeEl.innerHTML = combinedBannerHtml;
+      if (centerNoticeEl) centerNoticeEl.innerHTML = combinedBannerHtml;
+
+      const storeBdayEl = document.getElementById('storeBirthdayNotice');
+      const drawerBdayEl = document.getElementById('drawerBirthdayBanner');
+      if (storeBdayEl) storeBdayEl.classList.add('hidden');
+      if (drawerBdayEl) drawerBdayEl.classList.add('hidden');
+    }
+
+    function applyLoggedInMember(member, shelfProducts, memberOrders, memberReturns) {
+
+      const cartRows = getActiveCartRows();
+      const cartTotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const isVip = m.memberType === 'VIP會員';
+      const vipThreshold = (typeof VIP_UPGRADE_THRESHOLD !== 'undefined') ? VIP_UPGRADE_THRESHOLD : 28000;
+      const diffVip = Math.max(0, vipThreshold - cartTotal);
 
       
       const currentMonth = new Date().getMonth() + 1;
       const bdaySlash = getMemberBirthdaySlash(m);
       const memberBirthMonth = getMemberBirthMonth(m);
       const isBirthdayMonth = memberBirthMonth === currentMonth;
-      const bdayMsg = '🎉 當月壽星專屬福利（生日：' + bdaySlash + '）：公司當月送禮、當月消費皆享免運禮遇！';
+
+      
+      let vipText = '';
+      const vipValidity = calculateVipValidity(m, state.orders);
+      if (isVip) {
+        if (vipValidity && vipValidity.isRenewed) {
+          vipText = '👑 尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：累積已達標，自動順延 1 年！全館享 85 折。';
+        } else if (vipValidity && vipValidity.isExpiringSoon) {
+          vipText = '⚠️ VIP 到期提醒：將於 ' + vipValidity.vipExpireDate + ' 到期（剩 ' + vipValidity.daysRemaining + ' 天），滿 NT$ 28,000 自動順延！';
+        } else {
+          vipText = '👑 尊榮 VIP 會員：全館商品已自動享有專屬 85 折優惠價。';
+        }
+      } else if (diffVip === 0 && cartTotal > 0) {
+        vipText = '👑 結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！已達升等門檻 🎉';
+      } else {
+        vipText = '👑 結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！差 NT$ ' + diffVip.toLocaleString() + ' 即可升等 🛒';
+      }
+
+      
+      let shippingText = '';
+      if (cartTotal <= 0) {
+        shippingText = '🚚 全館消費滿 NT$ 5,000 即享免運費（未達加收 NT$ 150 運費）';
+      } else if (isBirthdayMonth) {
+        shippingText = '🎂 歡慶本月壽星！全單享專屬免運費禮遇（現省 NT$ 150）';
+      } else if (cartTotal >= 5000) {
+        shippingText = '🚚 本筆已達 NT$ 5,000 免運門檻，享自動免運費優惠 🎉';
+      } else {
+        const diffShipping = 5000 - cartTotal;
+        shippingText = '🚚 差 NT$ ' + diffShipping.toLocaleString() + ' 即可享有免運費（目前運費 NT$ 150，滿 NT$ 5,000 免運）';
+      }
+
+      
+      let bdayGiftText = '';
+      if (isBirthdayMonth) {
+        bdayGiftText = cartTotal > 0
+          ? '🎁 壽星專屬禮遇：購物車已自動免費帶入【妍之馨年度限定尊榮生日禮】！'
+          : '🎁 當月壽星福利：本月消費滿NT$5000即贈專屬生日禮 ＋ 全月免運費！';
+      }
+
+      
+      const combinedBannerHtml = 
+        '<div class="space-y-1">' +
+          '<div class="flex items-center space-x-1.5 font-medium ' + (cartTotal >= 5000 || isBirthdayMonth ? 'text-[#15803D]' : 'text-[#1D4ED8]') + '">' +
+            '<span>' + shippingText + '</span>' +
+          '</div>' +
+          '<div class="text-[#262626]">' +
+            '<span>' + vipText + '</span>' +
+          '</div>' +
+          (bdayGiftText ? '<div class="text-[#15803D] font-medium">' + bdayGiftText + '</div>' : '') +
+        '</div>';
+
+      const storeNoticeEl = document.getElementById('storeVipProgressNotice');
+      const drawerNoticeEl = document.getElementById('drawerVipDiffBanner');
+      const memberCartNoticeEl = document.getElementById('memberCartVipDiffText');
+      const centerNoticeEl = document.getElementById('memberCenterVipNote');
+
+      if (storeNoticeEl) storeNoticeEl.innerHTML = combinedBannerHtml;
+      if (drawerNoticeEl) drawerNoticeEl.innerHTML = combinedBannerHtml;
+      if (memberCartNoticeEl) memberCartNoticeEl.innerHTML = combinedBannerHtml;
+      if (centerNoticeEl) centerNoticeEl.innerHTML = combinedBannerHtml;
 
       const storeBdayEl = document.getElementById('storeBirthdayNotice');
       const drawerBdayEl = document.getElementById('drawerBirthdayBanner');
-      const centerBdayEl = document.getElementById('memberCenterBirthdayNote');
-
-      if (isBirthdayMonth) {
-        if (storeBdayEl) { storeBdayEl.textContent = bdayMsg; storeBdayEl.classList.remove('hidden'); }
-        if (drawerBdayEl) { drawerBdayEl.textContent = bdayMsg; drawerBdayEl.classList.remove('hidden'); }
-        if (centerBdayEl) { centerBdayEl.textContent = bdayMsg; centerBdayEl.className = 'text-xs msg-green font-medium leading-relaxed'; }
-      } else {
-        if (storeBdayEl) storeBdayEl.classList.add('hidden');
-        if (drawerBdayEl) drawerBdayEl.classList.add('hidden');
-        if (centerBdayEl) {
-          centerBdayEl.textContent = bdaySlash
-            ? '壽星專屬禮遇（您的生日紀錄：' + bdaySlash + '）：於 ' + memberBirthMonth + ' 月份生日當月享公司專屬贈禮與全月消費免運。'
-            : '壽星專屬禮遇：生日當月享有公司專屬送禮與當月消費皆免運福利。';
-          centerBdayEl.className = 'text-xs msg-black leading-relaxed';
-        }
-      }
+      if (storeBdayEl) storeBdayEl.classList.add('hidden');
+      if (drawerBdayEl) drawerBdayEl.classList.add('hidden');
     }
 
     function applyLoggedInMember(member, shelfProducts, memberOrders, memberReturns) {
@@ -2014,6 +2263,37 @@
       document.getElementById('memberDefRecipientPhone').value = formatPhoneStandard(defRec.recipientPhone || m.phone || '');
       document.getElementById('memberDefRecipientAddress').value = defRec.recipientAddress || '';
       document.getElementById('memberDefDeliveryTime').value = defRec.deliveryTimeSlot || '09:00-11:30';
+
+      
+      const vipStartRow = document.getElementById('profileVipStartRow');
+      const vipExpireRow = document.getElementById('profileVipExpireRow');
+      const vipValidity = calculateVipValidity(m, state.orders);
+
+      if (m.memberType === 'VIP會員' && vipValidity) {
+        if (vipStartRow) {
+          vipStartRow.classList.remove('hidden');
+          vipStartRow.classList.add('flex');
+        }
+        if (vipExpireRow) {
+          vipExpireRow.classList.remove('hidden');
+          vipExpireRow.classList.add('flex');
+        }
+        document.getElementById('profileMemberVipStart').textContent = vipValidity.vipStartTime;
+        document.getElementById('profileMemberVipExpire').textContent = 
+          vipValidity.vipExpireDate + 
+          (vipValidity.isRenewed ? '（累積達標已自動順延 ' + vipValidity.totalRenewedYears + ' 年）' : '') + 
+          ' ｜ 本期累積 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + 
+          (vipValidity.renewalDiff > 0 ? '（差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + ' 續約）' : '（本期已達標）');
+      } else {
+        if (vipStartRow) {
+          vipStartRow.classList.add('hidden');
+          vipStartRow.classList.remove('flex');
+        }
+        if (vipExpireRow) {
+          vipExpireRow.classList.add('hidden');
+          vipExpireRow.classList.remove('flex');
+        }
+      }
 
       renderVipAndBirthdayBanners();
     }
@@ -2402,7 +2682,13 @@
     function renderCartDrawer() {
       const cartRows = getActiveCartRows();
       const totalQty = cartRows.reduce(function(acc, r) { return acc + Number(r.buyQty || 0); }, 0);
-      const totalAmount = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+
+      
+      const currentMonth = new Date().getMonth() + 1;
+      const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
+      const shippingFee = calculateShippingFee(subtotal, isBirthdayMonth);
+      const finalTotal = subtotal > 0 ? (subtotal + shippingFee) : 0;
 
       document.getElementById('headerCartCount').textContent = String(totalQty);
       document.getElementById('drawerCartCountBadge').textContent = totalQty + ' 件';
@@ -2411,12 +2697,59 @@
         state.currentMember && state.currentMember.memberType === 'VIP會員'
           ? 'VIP 會員 85 折優惠價'
           : '一般會員標準價';
-      document.getElementById('cartSummaryTotalPrice').textContent = 'NT$ ' + totalAmount.toLocaleString();
+
+      const subtotalEl = document.getElementById('cartSummarySubtotal');
+      if (subtotalEl) subtotalEl.textContent = 'NT$ ' + subtotal.toLocaleString();
+
+      const shippingEl = document.getElementById('cartSummaryShipping');
+      if (shippingEl) {
+        if (subtotal <= 0) {
+          shippingEl.textContent = 'NT$ 0';
+          shippingEl.className = 'font-mono text-[#111111]';
+        } else if (shippingFee === 0) {
+          shippingEl.textContent = isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)';
+          shippingEl.className = 'font-mono text-[#15803D] font-medium';
+        } else {
+          shippingEl.textContent = '+ NT$ 150';
+          shippingEl.className = 'font-mono text-[#B91C1C] font-medium';
+        }
+      }
+
+      document.getElementById('cartSummaryTotalPrice').textContent = 'NT$ ' + finalTotal.toLocaleString();
 
       renderVipAndBirthdayBanners();
 
       const listContainer = document.getElementById('cartStep1Body');
       listContainer.innerHTML = '';
+
+      
+      if (isBirthdayMonth && cartRows.length > 0) {
+        const giftEl = document.createElement('div');
+        giftEl.className = 'p-3.5 border border-[#86EFAC] bg-[#F0FDF4] flex items-center justify-between gap-3';
+        giftEl.innerHTML =
+          '<div class="flex items-center space-x-3">' +
+            '<div class="w-12 h-12 bg-white border border-[#86EFAC] flex items-center justify-center shrink-0">' +
+              '<svg class="w-6 h-6 stroke-[#15803D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">' +
+                '<polyline points="20 12 20 22 4 22 4 12"/>' +
+                '<rect x="2" y="7" width="20" height="5"/>' +
+                '<line x1="12" y1="22" x2="12" y2="7"/>' +
+                '<path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>' +
+                '<path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>' +
+              '</svg>' +
+            '</div>' +
+            '<div>' +
+              '<div class="flex items-center space-x-1.5">' +
+                '<span class="px-1.5 py-0.5 text-[10px] bg-[#15803D] text-white font-medium rounded-sm">當月壽星專屬</span>' +
+                '<h4 class="text-xs font-semibold text-[#111111]">Namis 年度限定尊榮生日禮</h4>' +
+              '</div>' +
+              '<div class="text-[11px] text-[#15803D] mt-0.5 font-medium">當月單筆消費即享免費贈送 ｜ 數量：1 組</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="text-right shrink-0">' +
+            '<div class="text-xs font-mono font-bold text-[#15803D]">NT$ 0 (贈禮)</div>' +
+          '</div>';
+        listContainer.appendChild(giftEl);
+      }
 
       if (cartRows.length === 0) {
         listContainer.innerHTML = '<div class="py-16 text-center hairline-border bg-[#FAFAFA] p-6">' +
@@ -2487,6 +2820,36 @@
         return;
       }
 
+      const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const currentMonth = new Date().getMonth() + 1;
+      const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
+      const shippingFee = calculateShippingFee(subtotal, isBirthdayMonth);
+      const finalTotal = subtotal + shippingFee;
+
+      
+      if (isBirthdayMonth) {
+        const bdayCard = document.createElement('div');
+        bdayCard.className = 'p-3 border border-[#86EFAC] bg-[#F0FDF4] flex items-center justify-between gap-3';
+        bdayCard.innerHTML =
+          '<div class="flex items-center space-x-2.5">' +
+            '<div class="w-8 h-8 bg-white border border-[#86EFAC] flex items-center justify-center shrink-0 rounded-sm">' +
+              '<svg class="w-4 h-4 stroke-[#15803D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">' +
+                '<polyline points="20 12 20 22 4 22 4 12"/>' +
+                '<rect x="2" y="7" width="20" height="5"/>' +
+                '<line x1="12" y1="22" x2="12" y2="7"/>' +
+                '<path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>' +
+                '<path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>' +
+              '</svg>' +
+            '</div>' +
+            '<div>' +
+              '<div class="text-xs font-medium text-[#111111]">Namis 年度限定尊榮生日禮</div>' +
+              '<div class="text-[11px] text-[#15803D]">當月壽星專屬贈品 ｜ 數量：1 組</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="text-xs font-mono font-bold text-[#15803D]">NT$ 0 (贈禮)</div>';
+        container.appendChild(bdayCard);
+      }
+
       cartRows.forEach(function(item) {
         const imgs = parseProductImages(item.images, item.productName);
         const fallbackImg = makeMinimalistFallbackSvg(item.productName);
@@ -2502,6 +2865,23 @@
           '<div class="text-xs font-mono font-medium text-[#111111]">NT$ ' + Number(item.subtotal).toLocaleString() + '</div>';
         container.appendChild(el);
       });
+
+      
+      const summaryBar = document.createElement('div');
+      summaryBar.className = 'p-3.5 hairline-border bg-white text-xs space-y-1';
+      summaryBar.innerHTML =
+        '<div class="flex justify-between text-[#666666]">' +
+          '<span>商品小計</span><span class="font-mono text-[#111111]">NT$ ' + subtotal.toLocaleString() + '</span>' +
+        '</div>' +
+        '<div class="flex justify-between text-[#666666]">' +
+          '<span>配送運費</span><span class="font-mono ' + (shippingFee === 0 ? 'text-[#15803D] font-medium' : 'text-[#B91C1C] font-medium') + '">' +
+            (shippingFee === 0 ? (isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)') : '+ NT$ 150') +
+          '</span>' +
+        '</div>' +
+        '<div class="flex justify-between font-medium text-[#111111] pt-1.5 hairline-t">' +
+          '<span>應付總額</span><span class="font-mono text-sm text-[#1D4ED8]">NT$ ' + finalTotal.toLocaleString() + '</span>' +
+        '</div>';
+      container.appendChild(summaryBar);
     }
 
     
@@ -3383,9 +3763,22 @@
         document.getElementById('cartDrawerBackdrop').classList.remove('hidden');
       });
 
+      
       document.getElementById('closeCartDrawerBtn').addEventListener('click', () => {
         document.getElementById('cartDrawerBackdrop').classList.add('hidden');
       });
+
+      
+      const cartBackdropEl = document.getElementById('cartDrawerBackdrop');
+      if (cartBackdropEl) {
+        cartBackdropEl.addEventListener('click', function(e) {
+          const drawerContent = cartBackdropEl.querySelector('.max-w-xl');
+          
+          if (drawerContent && !drawerContent.contains(e.target)) {
+            cartBackdropEl.classList.add('hidden');
+          }
+        });
+      }
 
       document.getElementById('cartStep1Tab').addEventListener('click', () => switchCartDrawerStep(1));
       document.getElementById('cartStep2Tab').addEventListener('click', () => switchCartDrawerStep(2));
@@ -3401,36 +3794,221 @@
       
       const btnHome = document.getElementById('deliveryModeHome');
       const btn711 = document.getElementById('deliveryMode711');
-      const cvsBox = document.getElementById('cvs711HelperBox');
+      const btnStore = document.getElementById('deliveryModeStore');
+      const storeBox = document.getElementById('storePickupOptionBox');
+      const payOnSiteCb = document.getElementById('payOnSiteCheckbox');
       const addrInput = document.getElementById('shipRecipientAddress');
+      const addrDropdown = document.getElementById('shipAddressDropdownList');
       const timeSlotSelect = document.getElementById('shipDeliveryTime');
+      const submitOrderBtn = document.getElementById('submitCompleteOrderBtn');
+      const paymentHintText = document.getElementById('checkoutPaymentHintText');
 
-      if (btnHome && btn711 && addrInput) {
+      state.currentDeliveryMode = 'home'; 
+      let addrSearchTimer = null;
+
+      function updateCheckoutBtnState() {
+        const isStore = state.currentDeliveryMode === 'store';
+        const isPayOnSite = isStore && payOnSiteCb && payOnSiteCb.checked;
+
+        if (submitOrderBtn) {
+          submitOrderBtn.textContent = isPayOnSite ? '下訂' : '前往付款';
+        }
+        if (paymentHintText) {
+          paymentHintText.textContent = isPayOnSite
+            ? '您已勾選「現場付款」，點擊下方「下訂」將直接成立訂單，親臨門市取貨時再行付款。'
+            : '點擊下方「前往付款」將跳轉至安全金流頁進行付款';
+        }
+      }
+
+      if (btnHome && btn711 && btnStore && addrInput) {
+        
         btnHome.addEventListener('click', function() {
-          btnHome.className = 'px-2.5 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
-          btn711.className = 'px-2.5 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
-          cvsBox.classList.add('hidden');
+          state.currentDeliveryMode = 'home';
+          btnHome.className = 'px-2 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
+          btn711.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          btnStore.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          if (storeBox) storeBox.classList.add('hidden');
+          if (addrDropdown) addrDropdown.classList.add('hidden');
+          if (payOnSiteCb) payOnSiteCb.checked = false;
+
+          addrInput.readOnly = false;
           addrInput.placeholder = '完整縣市、行政區、街道門牌樓層';
-          if (timeSlotSelect) timeSlotSelect.disabled = false;
+          fillDefaultRecipientInfo();
+          updateCheckoutBtnState();
+          renderCartDrawer();
         });
 
-        btn711.addEventListener('click', function() {
-          btn711.className = 'px-2.5 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
-          btnHome.className = 'px-2.5 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
-          cvsBox.classList.remove('hidden');
-          addrInput.placeholder = '例如：7-11 鑫泰門市 (店號: 218451) 台北市信義區...';
+        
+        state.cached711Stores = [];
+
+        async function preload711Stores() {
+          if (state.cached711Stores && state.cached711Stores.length > 0) return state.cached711Stores;
+
           
-          if (timeSlotSelect) {
-            timeSlotSelect.value = '09:00-11:30';
+          const localData = safeGetStorage('YZX_711_CATALOG_V2');
+          if (localData) {
+            try {
+              const parsed = JSON.parse(localData);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                state.cached711Stores = parsed;
+                return parsed;
+              }
+            } catch (e) {}
+          }
+
+          
+          try {
+            const res = await callBackend('getAll711Stores', {});
+            if (res.status === 'success' && res.data && Array.isArray(res.data.stores)) {
+              const indexedList = res.data.stores.map(function(item) {
+                const c = item[0] || '';
+                const d = item[1] || '';
+                const a = item[2] || '';
+                const n = item[3] || '';
+                return {
+                  c: c, d: d, a: a, n: n,
+                  s: (c + d + a + n).toLowerCase().replace(/臺/g, '台') 
+                };
+              });
+              state.cached711Stores = indexedList;
+              safeSetStorage('YZX_711_CATALOG_V2', JSON.stringify(indexedList));
+              return indexedList;
+            }
+          } catch (err) {}
+          return [];
+        }
+
+        
+        function executeInstant711Filter(query) {
+          if (!addrDropdown) return;
+          const stores = state.cached711Stores || [];
+          if (stores.length === 0) return;
+
+          const normQuery = query.toLowerCase().replace(/臺/g, '台');
+          const tokens = normQuery.split(/\s+/).filter(Boolean);
+          const matched = [];
+
+          for (let i = 0; i < stores.length; i++) {
+            const item = stores[i];
+            let isMatch = true;
+            for (let k = 0; k < tokens.length; k++) {
+              if (item.s.indexOf(tokens[k]) === -1) {
+                isMatch = false;
+                break;
+              }
+            }
+            if (isMatch) {
+              matched.push(item);
+              if (matched.length >= 25) break; 
+            }
+          }
+
+          if (matched.length === 0) {
+            addrDropdown.innerHTML = '<div class="p-3 text-xs text-[#6B7280] text-center">查無符合「' + query + '」的 7-11 門市，請嘗試更換路名或區域</div>';
+          } else {
+            addrDropdown.innerHTML = matched.map(function(st, idx) {
+              return '<div data-instant-pick-idx="' + idx + '" class="p-2.5 hover:bg-[#EFF6FF] cursor-pointer transition-colors text-left">' +
+                '<div class="flex items-center justify-between">' +
+                  '<span class="text-xs font-semibold text-[#1D4ED8]">' + st.n + '</span>' +
+                  '<span class="text-[10px] px-1.5 py-0.5 bg-[#EDF2F7] text-[#4A5568] rounded-sm">' + st.c + st.d + '</span>' +
+                '</div>' +
+                '<div class="text-[11px] text-[#4B5563] mt-0.5">' + st.a + '</div>' +
+              '</div>';
+            }).join('');
+
+            
+            addrDropdown.querySelectorAll('[data-instant-pick-idx]').forEach(function(itemEl) {
+              itemEl.addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                const chosen = matched[Number(itemEl.getAttribute('data-instant-pick-idx'))];
+                addrInput.value = chosen.n + '（' + chosen.a + '）';
+                addrDropdown.classList.add('hidden');
+                showToast('✓ 已帶入門市：' + chosen.n, 'success');
+              });
+            });
+          }
+          addrDropdown.classList.remove('hidden');
+        }
+
+        
+        btn711.addEventListener('click', function() {
+          state.currentDeliveryMode = '711';
+          btn711.className = 'px-2 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
+          btnHome.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          btnStore.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          if (storeBox) storeBox.classList.add('hidden');
+          if (addrDropdown) addrDropdown.classList.add('hidden');
+          if (payOnSiteCb) payOnSiteCb.checked = false;
+
+          addrInput.readOnly = false;
+          addrInput.placeholder = '請直接輸入縣市區域或門市名稱（例如：台中市北屯區、崇德）過篩門市...';
+          addrInput.value = '';
+
+          
+          preload711Stores();
+
+          setTimeout(function() { addrInput.focus(); }, 100);
+          updateCheckoutBtnState();
+          renderCartDrawer();
+        });
+
+        
+        btnStore.addEventListener('click', function() {
+          state.currentDeliveryMode = 'store';
+          btnStore.className = 'px-2 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
+          btnHome.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          btn711.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
+          if (storeBox) storeBox.classList.remove('hidden');
+          if (addrDropdown) addrDropdown.classList.add('hidden');
+
+          addrInput.value = '408 臺中市南屯區文心南二路420號';
+          addrInput.readOnly = true;
+          updateCheckoutBtnState();
+          renderCartDrawer();
+        });
+
+        
+        addrInput.addEventListener('input', function(e) {
+          if (state.currentDeliveryMode !== '711') {
+            if (addrDropdown) addrDropdown.classList.add('hidden');
+            return;
+          }
+
+          const query = e.target.value.trim();
+
+          
+          if (query.includes('（') || query.includes('(') || query.length < 2) {
+            if (addrDropdown) addrDropdown.classList.add('hidden');
+            return;
+          }
+
+          
+          if (state.cached711Stores && state.cached711Stores.length > 0) {
+            executeInstant711Filter(query);
+          } else {
+            preload711Stores().then(function() {
+              executeInstant711Filter(query);
+            });
           }
         });
 
         
-        const mapBtn = document.getElementById('open711OfficialMapBtn');
-        if (mapBtn) {
-          mapBtn.addEventListener('click', function() {
-            window.open('https://emap.pcsc.com.tw/', '711_emap', 'width=980,height=680,scrollbars=yes,resizable=yes');
-          });
+        document.addEventListener('click', function(e) {
+          if (addrDropdown && !addrDropdown.contains(e.target) && e.target !== addrInput) {
+            addrDropdown.classList.add('hidden');
+          }
+        });
+
+        
+        document.addEventListener('click', function(e) {
+          if (addrDropdown && !addrDropdown.contains(e.target) && e.target !== addrInput) {
+            addrDropdown.classList.add('hidden');
+          }
+        });
+
+        
+        if (payOnSiteCb) {
+          payOnSiteCb.addEventListener('change', updateCheckoutBtnState);
         }
       }
 
@@ -3448,32 +4026,45 @@
         }
 
         const cartRows = getActiveCartRows();
-        const totalAmount = cartRows.reduce((acc, r) => acc + Number(r.subtotal || 0), 0);
-        if (totalAmount <= 0) {
+        const subtotal = cartRows.reduce((acc, r) => acc + Number(r.subtotal || 0), 0);
+        if (subtotal <= 0) {
           setInlineNotice('checkoutStatusNotice', '購物車結帳金額異常，請重新確認商品', 'red');
           return;
         }
 
         
-        safeSetStorage('YZX_DEF_RECIPIENT_' + state.currentMember.memberId, JSON.stringify({
-          recipientName,
-          recipientPhone,
-          recipientAddress,
-          deliveryTimeSlot
-        }));
+        const isStorePickup = state.currentDeliveryMode === 'store';
+        const isPayOnSite = isStorePickup && document.getElementById('payOnSiteCheckbox') && document.getElementById('payOnSiteCheckbox').checked;
 
+        const currentMonth = new Date().getMonth() + 1;
+        const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
+        const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth);
+        const totalAmount = subtotal + shippingFee;
+
+        
+        if (!isStorePickup && state.currentDeliveryMode === 'home') {
+          safeSetStorage('YZX_DEF_RECIPIENT_' + state.currentMember.memberId, JSON.stringify({
+            recipientName,
+            recipientPhone,
+            recipientAddress,
+            deliveryTimeSlot
+          }));
+        }
+
+        const actionText = isPayOnSite ? '成立訂單' : '建立金流訂單';
         const btn = document.getElementById('submitCompleteOrderBtn');
         try {
-          const res = await runWithButtonProgress(btn, 'checkoutStatusNotice', '建立金流訂單', () =>
+          const res = await runWithButtonProgress(btn, 'checkoutStatusNotice', actionText, () =>
             callBackend('submitCheckoutOrder', {
               memberId: state.currentMember.memberId,
               recipientName,
               recipientPhone,
               recipientAddress,
               deliveryTimeSlot,
-              note,
+              note: [note, isStorePickup ? '【到店取貨】' : ''].filter(Boolean).join('｜'),
               atmLast5: '',
-              payMethod: '', 
+              payMethod: isPayOnSite ? '門市現場付款' : '',
+              isPayOnSite: isPayOnSite,
               totalAmount: totalAmount
             })
           );
