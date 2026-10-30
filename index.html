@@ -7,19 +7,20 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant&#43;Garamond:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter:wght@300;400;500;600&amp;family=Noto&#43;Sans&#43;TC:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto&#43;Sans&#43;TC:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     :root {
-      --bg-primary: #FFFFFF;
-      --bg-subtle: #FAFAFA;
-      --bg-muted: #F4F4F2;
-      --ink-primary: #111111;
-      --ink-secondary: #555555;
-      --ink-muted: #888888;
-      --line-light: #E6E6E4;
-      --line-mid: #CCCCCC;
-      --line-dark: #111111;
+      --bg-primary: #D6E7F7;        
+      --bg-subtle: #EDF5FD;
+      --bg-card: #FFFFFF;
+      --ink-primary: #262626;       
+      --ink-secondary: #4B5563;
+      --ink-muted: #6B7280;
+      --brand-blue: #1D4ED8;        
+      --line-light: #BFDBFE;
+      --line-mid: #93C5FD;
+      --line-dark: #1E3A8A;
       --status-red: #B91C1C;
       --status-green: #15803D;
     }
@@ -32,14 +33,16 @@
       padding: 0;
       background-color: var(--bg-primary);
       color: var(--ink-primary);
-      font-family: 'Noto Sans TC', 'Inter', sans-serif;
+       
+      font-family: 'Noto Sans TC', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
       font-weight: 400;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
     .font-editorial {
-      font-family: 'Cormorant Garamond', 'Noto Sans TC', serif;
+      font-family: 'Noto Sans TC', 'Inter', sans-serif;
+      font-weight: 500;
     }
     .hairline-border {
       border: 1px solid var(--line-light);
@@ -59,33 +62,22 @@
     .hairline-r {
       border-right: 1px solid var(--line-light);
     }
-    .btn-minimal-dark {
-      background-color: #111111;
-      color: #FFFFFF;
-      border: 1px solid #111111;
+     
+    .btn-minimal-dark, .btn-minimal-outline {
+      background-color: #FFFFFF !important;
+      color: #262626 !important;
+      border: 1px solid #262626 !important;
+      transition: all 0.22s ease-in-out;
     }
-    .btn-minimal-dark:hover:not(:disabled) {
-      background-color: #FFFFFF;
-      color: #111111;
+    .btn-minimal-dark:hover:not(:disabled), .btn-minimal-outline:hover:not(:disabled) {
+      background-color: #353535 !important;
+      color: #FFFFFF !important;
+      border-color: #353535 !important;
     }
-    .btn-minimal-dark:disabled {
-      background-color: #EBEBEB;
-      color: #777777;
-      border-color: #DCDCDC;
-      cursor: not-allowed;
-    }
-    .btn-minimal-outline {
-      background-color: #FFFFFF;
-      color: #111111;
-      border: 1px solid #D4D4D2;
-    }
-    .btn-minimal-outline:hover:not(:disabled) {
-      border-color: #111111;
-      background-color: #FAFAFA;
-    }
-    .btn-minimal-outline:disabled {
-      color: #999999;
-      border-color: #E6E6E4;
+    .btn-minimal-dark:disabled, .btn-minimal-outline:disabled {
+      background-color: #F3F4F6 !important;
+      color: #9CA3AF !important;
+      border-color: #E5E7EB !important;
       cursor: not-allowed;
     }
     .input-minimal {
@@ -139,47 +131,47 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-white text-[#111111] selection:bg-[#111111] selection:text-white">
+<body class="min-h-screen flex flex-col bg-[#D6E7F7] text-[#262626]">
 
   
-  <header class="sticky top-0 z-30 bg-white/95 hairline-b">
+  <header class="sticky top-0 z-30 bg-white/95 border-b border-[#BFDBFE] backdrop-blur-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
       
       <button id="brandHomeBtn" type="button" class="text-left focus:outline-none" title="返回專櫃首頁">
         <div class="flex items-baseline space-x-2.5">
-          <span class="font-editorial text-2xl sm:text-[26px] font-medium tracking-[0.18em] text-[#111111]">Namis</span>
-          <span class="text-xs tracking-[0.25em] text-[#555555] font-light">妍之馨</span>
+          <span class="font-editorial text-2xl sm:text-[26px] font-medium tracking-[0.14em] text-[#262626]">Namis</span>
+          <span class="text-xs tracking-[0.22em] text-[#4B5563] font-normal">妍之馨</span>
         </div>
       </button>
 
       
       <div id="headerMemberArea" class="hidden items-center space-x-2.5">
         
-        <button type="button" id="navTabStore" title="專櫃商城" aria-label="專櫃商城" class="w-10 h-10 hairline-border flex items-center justify-center bg-[#111111] text-white">
+        <button type="button" id="navTabStore" title="專櫃商城" aria-label="專櫃商城" class="w-10 h-10 border border-[#262626] flex items-center justify-center bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
             <path d="M3 9l1.5-5h15L21 9"/>
-            <path d="M3 9c0 1.66 1.34 3 3 3s3-1.34 3-3c0 1.66 1.34 3 3 3s3-1.34 3-3c0 1.66 1.34 3 3 3s3-1.34 3-3"/>
+            <path d="M3 9c0 1.66 1.34 3 3 3s3-1.34 3-3c0 1.66 1.34 3 3 3s3-1.34 3-3"/>
             <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8"/>
           </svg>
         </button>
 
         
-        <button type="button" id="navTabOrders" title="會員專區" aria-label="會員專區" class="relative w-10 h-10 hairline-border flex items-center justify-center bg-white text-[#111111] hover:border-[#111111]">
+        <button type="button" id="navTabOrders" title="會員專區" aria-label="會員專區" class="relative w-10 h-10 border border-[#262626] flex items-center justify-center bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          <span id="navOrderCountBadge" class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-mono flex items-center justify-center bg-[#111111] text-white">0</span>
+          <span id="navOrderCountBadge" class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-mono flex items-center justify-center bg-[#1D4ED8] text-white rounded-full">0</span>
         </button>
 
         
-        <button type="button" id="openCartDrawerBtn" title="購物車" aria-label="購物車" class="relative w-10 h-10 hairline-border flex items-center justify-center bg-white text-[#111111] hover:border-[#111111]">
+        <button type="button" id="openCartDrawerBtn" title="購物車" aria-label="購物車" class="relative w-10 h-10 border border-[#262626] flex items-center justify-center bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
             <path d="M3 6h18"/>
             <path d="M16 10a4 4 0 0 1-8 0"/>
           </svg>
-          <span id="headerCartCount" class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-mono flex items-center justify-center bg-[#111111] text-white">0</span>
+          <span id="headerCartCount" class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-mono flex items-center justify-center bg-[#1D4ED8] text-white rounded-full">0</span>
         </button>
       </div>
     </div>
@@ -188,23 +180,23 @@
   
   
   
-  <section id="authGateView" class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 bg-white">
-    <div class="w-full max-w-md hairline-border bg-white p-7 sm:p-9">
+  <section id="authGateView" class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 bg-[#D6E7F7]">
+    <div class="w-full max-w-md bg-white border border-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-7 sm:p-9">
       
-      <div class="text-center pb-6 hairline-b mb-6">
-        <div class="text-[11px] tracking-[0.22em] text-[#666666] mb-1.5">妍之馨會員專屬選品專櫃</div>
-        <h1 class="font-editorial text-2xl sm:text-3xl font-normal tracking-[0.08em] text-[#111111]">
-          會員登入與驗證
+      <div class="text-center pb-6 border-b border-[#E5E7EB] mb-6">
+        <div class="text-[11px] tracking-[0.22em] text-[#6B7280] mb-1.5 font-medium">妍之馨會員專屬選品專櫃</div>
+        <h1 class="text-2xl sm:text-3xl font-medium tracking-[0.04em] text-[#262626]">
+          登入與註冊
         </h1>
       </div>
 
       
-      <div class="grid grid-cols-2 hairline-border mb-6">
-        <button type="button" id="tabSwitchLogin" class="py-2.5 text-xs tracking-[0.14em] font-medium bg-[#111111] text-white">
-          會員登入
+      <div class="grid grid-cols-2 border border-[#262626] mb-6 overflow-hidden">
+        <button type="button" id="tabSwitchLogin" class="py-2.5 text-xs tracking-[0.14em] font-medium bg-[#353535] text-white transition-colors">
+          登入
         </button>
-        <button type="button" id="tabSwitchRegister" class="py-2.5 text-xs tracking-[0.14em] font-medium bg-white text-[#666666] hover:text-[#111111]">
-          新客註冊
+        <button type="button" id="tabSwitchRegister" class="py-2.5 text-xs tracking-[0.14em] font-medium bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors">
+          註冊
         </button>
       </div>
 
@@ -231,7 +223,7 @@
 
           <div class="pt-2">
             <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 text-xs tracking-[0.16em] font-medium btn-minimal-dark">
-              驗證登入
+              登入
             </button>
           </div>
         </form>
@@ -271,7 +263,7 @@
 
         <div class="pt-2">
           <button type="submit" id="registerSubmitBtn" class="w-full py-3.5 text-xs tracking-[0.16em] font-medium btn-minimal-dark">
-            立即註冊
+            註冊
           </button>
         </div>
       </form>
@@ -289,10 +281,10 @@
     </div>
 
     
-    <div class="pb-6 hairline-b flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div class="pb-6 border-b border-[#BFDBFE] flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <div id="storeActiveCategoryLabel" class="text-xs tracking-[0.16em] text-[#666666] mb-1">全類專櫃</div>
-        <h2 class="font-editorial text-2xl sm:text-3xl font-normal tracking-[0.06em] text-[#111111]">
+        <div id="storeActiveCategoryLabel" class="text-xs tracking-[0.16em] text-[#4B5563] mb-1 font-medium">全類專櫃</div>
+        <h2 class="text-2xl sm:text-3xl font-medium tracking-[0.04em] text-[#1F2937]">
           妍之馨專櫃選品
         </h2>
       </div>
@@ -300,13 +292,13 @@
       
       <div class="flex items-center gap-2">
         <div class="relative flex-1 sm:w-72">
-          <input type="text" id="productSearchInput" placeholder="輸入關鍵字搜尋商品名稱、成份、規格..." class="input-minimal pl-9 py-2 text-xs" />
-          <svg class="w-3.5 h-3.5 text-[#888888] absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <input type="text" id="productSearchInput" placeholder="輸入關鍵字搜尋商品名稱、成份、規格..." class="input-minimal pl-9 py-2 text-xs bg-white border border-[#BFDBFE] focus:border-[#1D4ED8]" />
+          <svg class="w-3.5 h-3.5 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.3-4.3"/>
           </svg>
         </div>
-        <button type="button" id="refreshCatalogBtn" title="重新整理專櫃商品" aria-label="重新整理專櫃商品" class="w-9 h-9 btn-minimal-outline flex items-center justify-center">
+        <button type="button" id="refreshCatalogBtn" title="重新整理專櫃商品" aria-label="重新整理專櫃商品" class="w-9 h-9 bg-white border border-[#BFDBFE] hover:border-[#1D4ED8] flex items-center justify-center text-[#1F2937] transition-colors">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
             <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
             <path d="M3 3v5h5"/>
@@ -326,7 +318,15 @@
     </div>
 
     
-    <div id="productGridContainer" class="py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="productGridContainer" class="py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+
+    
+    <div class="pt-2 pb-16 flex justify-center">
+      <button type="button" id="browseAllProductsBtn" class="px-8 py-2.5 text-xs tracking-widest bg-white text-[#262626] border border-[#262626] hover:bg-[#353535] hover:text-white hover:border-[#353535] transition-all duration-200 flex items-center space-x-2">
+        <span>全部商品</span>
+        <span>&rarr;</span>
+      </button>
+    </div>
   </main>
 
   
@@ -489,99 +489,134 @@
       </div>
 
       
-      <div class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-12">
-        
-        <div class="md:col-span-6 p-6 hairline-b md:hairline-b-0 md:hairline-r flex flex-col justify-between bg-white">
-          <div>
-            <div class="aspect-square w-full hairline-border bg-[#FAFAFA] overflow-hidden relative mb-3 flex items-center justify-center">
-              <img id="modalMainImage" src="" alt="商品圖片" class="w-full h-full object-cover" />
-              <div id="modalAccessBadge" class="absolute top-3 left-3 px-2.5 py-1 text-[10px] tracking-wider bg-white/95 hairline-border text-[#111111]">
-                公開展售
-              </div>
-            </div>
-            <div id="modalThumbnailsContainer" class="grid grid-cols-5 gap-2"></div>
-          </div>
-
-          <div class="mt-6 pt-4 hairline-t text-xs text-[#666666] flex justify-between">
-            <span>展售期間</span>
-            <span id="modalSalePeriod" class="font-mono text-[#111111]">-</span>
-            <span id="modalSelectedProductCode" class="hidden"></span>
-          </div>
-        </div>
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 space-y-6 bg-white">
 
         
-        <div class="md:col-span-6 p-6 flex flex-col justify-between bg-white">
-          <div>
-            <h3 id="modalProductTitle" class="font-editorial text-2xl sm:text-3xl font-normal text-[#111111] mb-2">
-              商品名稱
-            </h3>
-            <p id="modalProductDesc" class="text-xs text-[#666666] leading-relaxed mb-5 pb-4 hairline-b">
-              商品介紹
-            </p>
+        <div class="space-y-3 select-none">
+          
+          <div id="modalGalleryContainer" class="relative aspect-square sm:aspect-[4/3] w-full max-h-[460px] bg-[#FAFAFA] border border-[#E5E7EB] overflow-hidden flex items-center justify-center rounded-sm">
+            <img id="modalGalleryMainImg" src="" alt="商品展示照片" class="w-full h-full object-contain transition-opacity duration-200" />
+            
+            
+            <button type="button" id="modalGalleryPrevBtn" aria-label="上一張照片" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#262626] border border-[#D1D5DB] shadow-md flex items-center justify-center z-10 transition-transform active:scale-95">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            
+            
+            <button type="button" id="modalGalleryNextBtn" aria-label="下一張照片" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#262626] border border-[#D1D5DB] shadow-md flex items-center justify-center z-10 transition-transform active:scale-95">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
 
             
-            <div class="mb-5 p-4 bg-[#FAFAFA] hairline-border flex items-baseline justify-between">
-              <div>
-                <div class="text-[11px] text-[#666666] mb-1">專櫃結算單價</div>
-                <div class="flex items-baseline space-x-3">
-                  <span id="modalActivePrice" class="text-2xl font-light text-[#111111]">NT$ 0</span>
-                  <span id="modalOriginalPriceStrike" class="text-xs text-[#888888] line-through"></span>
-                </div>
-              </div>
-              <div class="text-right">
-                <span id="modalVipPriceNote" class="inline-block px-2.5 py-1 text-[11px] hairline-border bg-white text-[#111111]">
-                  VIP 專屬價 NT$ 0
-                </span>
-              </div>
-            </div>
-
-            
-            <div class="mb-5">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-xs font-medium text-[#111111]">
-                  選擇款式與規格（共 <span id="modalVariantCount">1</span> 款）
-                </label>
-                <span class="text-xs text-[#666666]">剩餘數量：<strong id="modalSelectedStock" class="text-[#111111] font-mono">0</strong> 件</span>
-              </div>
-              <div id="modalVariantsList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
-            </div>
-
-            
-            <div class="grid grid-cols-3 gap-2 mb-5 text-center">
-              <div class="p-2 hairline-border bg-[#FAFAFA]">
-                <div class="text-[10px] text-[#777777]">商品型態</div>
-                <div id="modalAttrType" class="text-xs font-medium text-[#111111] truncate mt-0.5">-</div>
-              </div>
-              <div class="p-2 hairline-border bg-[#FAFAFA]">
-                <div class="text-[10px] text-[#777777]">顏色／規格</div>
-                <div id="modalAttrColorSpec" class="text-xs font-medium text-[#111111] truncate mt-0.5">-</div>
-              </div>
-              <div class="p-2 hairline-border bg-[#FAFAFA]">
-                <div class="text-[10px] text-[#777777]">主要成份</div>
-                <div id="modalAttrIngredient" class="text-xs font-medium text-[#111111] truncate mt-0.5">-</div>
-              </div>
+            <div id="modalGalleryCounter" class="absolute bottom-2.5 right-2.5 px-2.5 py-1 text-[11px] font-mono bg-black/60 text-white rounded-full pointer-events-none">
+              1 / 1
             </div>
           </div>
 
           
-          <div class="pt-4 hairline-t space-y-2.5">
-            <div class="flex items-center space-x-3">
-              <div class="flex items-center hairline-border bg-white">
-                <button type="button" id="modalQtyMinusBtn" aria-label="減少數量" class="w-10 h-11 flex items-center justify-center text-sm hover:bg-[#FAFAFA]">−</button>
-                <input type="number" id="modalQtyInput" value="1" min="1" max="99" class="w-12 h-11 text-center text-xs font-mono border-x border-[#E6E6E4] focus:outline-none" />
-                <button type="button" id="modalQtyPlusBtn" aria-label="增加數量" class="w-10 h-11 flex items-center justify-center text-sm hover:bg-[#FAFAFA]">+</button>
-              </div>
+          <div id="modalThumbnailsList" class="flex items-center space-x-2 overflow-x-auto py-1 custom-scrollbar"></div>
+        </div>
 
-              <button type="button" id="modalAddToCartBtn" class="flex-1 h-11 text-xs tracking-[0.14em] font-medium btn-minimal-dark flex items-center justify-center space-x-2">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                  <path d="M3 6h18"/>
-                  <path d="M12 10v6M9 13h6"/>
-                </svg>
-                <span>加入購物車</span>
-              </button>
+        
+        <div class="space-y-4 pt-4 border-t border-[#E5E7EB]">
+          <div>
+            <div class="text-xs text-[#6B7280]">商品完整名稱</div>
+            <div id="modalProductTitle" class="text-lg sm:text-xl font-medium text-[#111827] mt-1 break-words whitespace-pre-wrap"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">商品分類</div>
+            <div id="modalCategoryText" class="text-xs font-medium text-[#111827] mt-1 break-words"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">上架編號</div>
+            <div id="modalShelfCodeText" class="text-xs font-mono text-[#111827] mt-1 break-words"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">商品編號</div>
+            <div id="modalProductCodeText" class="text-xs font-mono text-[#111827] mt-1 break-words"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">商品型態</div>
+            <div id="modalAttrType" class="text-xs text-[#111827] mt-1 break-words whitespace-pre-wrap"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">顏色與規格</div>
+            <div id="modalAttrColorSpec" class="text-xs text-[#111827] mt-1 break-words whitespace-pre-wrap"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">主要成份</div>
+            <div id="modalAttrIngredient" class="text-xs text-[#111827] mt-1 break-words whitespace-pre-wrap"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">詳細說明與文案</div>
+            <div id="modalProductDesc" class="text-xs text-[#374151] mt-1 leading-relaxed break-words whitespace-pre-wrap p-3 bg-[#F9FAFB] border border-[#E5E7EB]"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">展售資格</div>
+            <div id="modalAccessBadge" class="text-xs text-[#111827] mt-1 break-words"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">專櫃售價</div>
+            <div id="modalActivePrice" class="text-base font-semibold text-[#1E40AF] font-mono mt-1"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">VIP 專屬優惠價</div>
+            <div id="modalVipPriceNote" class="text-xs font-medium text-[#047857] font-mono mt-1"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">架上剩餘數量</div>
+            <div id="modalSelectedStock" class="text-xs font-mono text-[#111827] mt-1"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">累計售出數量</div>
+            <div id="modalSoldQtyText" class="text-xs font-mono text-[#111827] mt-1"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">展售起訖期間</div>
+            <div id="modalSalePeriod" class="text-xs font-mono text-[#111827] mt-1 break-words"></div>
+          </div>
+        </div>
+
+        
+        <div class="pt-4 border-t border-[#E5E7EB] space-y-2">
+          <div class="text-xs font-medium text-[#111827]">
+            切換款式規格（共 <span id="modalVariantCount">1</span> 款）
+          </div>
+          <div id="modalVariantsList" class="space-y-2"></div>
+        </div>
+
+        
+        <div class="pt-6 border-t border-[#E5E7EB] space-y-3">
+          <div>
+            <label class="block text-xs text-[#6B7280] mb-1">選購數量</label>
+            <div class="flex items-center border border-[#D1D5DB] w-36 bg-white">
+              <button type="button" id="modalQtyMinusBtn" aria-label="減少數量" class="w-10 h-10 flex items-center justify-center text-sm hover:bg-[#F3F4F6]">−</button>
+              <input type="number" id="modalQtyInput" value="1" min="1" max="99" class="w-16 h-10 text-center text-xs font-mono border-x border-[#D1D5DB] focus:outline-none" />
+              <button type="button" id="modalQtyPlusBtn" aria-label="增加數量" class="w-10 h-10 flex items-center justify-center text-sm hover:bg-[#F3F4F6]">+</button>
             </div>
           </div>
+
+          <button type="button" id="modalAddToCartBtn" class="w-full py-3.5 text-xs tracking-widest font-medium bg-[#1E40AF] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center space-x-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+              <path d="M3 6h18"/>
+              <path d="M12 10v6M9 13h6"/>
+            </svg>
+            <span>加入購物車（標記選購）</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1212,30 +1247,18 @@
       if (!btnEl) return asyncTaskFn();
       const originalHtml = btnEl.innerHTML;
       btnEl.disabled = true;
-      let pct = 15;
-      btnEl.textContent = actionLabel + ' (' + pct + '%)';
-
-      const timer = setInterval(function() {
-        if (pct < 88) {
-          pct += Math.floor(Math.random() * 14) + 6;
-          if (pct > 88) pct = 88;
-          btnEl.textContent = actionLabel + ' (' + pct + '%)';
-        }
-      }, 180);
+      btnEl.style.opacity = '0.7';
 
       try {
         const result = await asyncTaskFn();
-        clearInterval(timer);
-        btnEl.textContent = actionLabel + ' (100%)';
-        setTimeout(function() {
-          btnEl.innerHTML = originalHtml;
-          btnEl.disabled = false;
-        }, 650);
-        return result;
-      } catch (err) {
-        clearInterval(timer);
         btnEl.innerHTML = originalHtml;
         btnEl.disabled = false;
+        btnEl.style.opacity = '1';
+        return result;
+      } catch (err) {
+        btnEl.innerHTML = originalHtml;
+        btnEl.disabled = false;
+        btnEl.style.opacity = '1';
         throw err;
       }
     }
@@ -1648,7 +1671,10 @@
         if (targetOrders.length === 0) return { status: 'error', message: '找不到該筆訂單' };
 
         targetOrders.forEach(row => {
-          row.orderStatus = '購物車';
+          const oldStatus = row.orderStatus || '下訂';
+          const cancelLog = '[' + ts.formatted.replace(/-/g, ' ') + ' 客戶前台] 訂單取消退回購物車，狀態：' + oldStatus + ' -> 選購（原訂單號: ' + row.orderNo + '）';
+          row.orderStatus = '選購';
+          row.updateLog = row.updateLog ? (row.updateLog + '\n' + cancelLog) : cancelLog;
           row.orderNo = '';
           row.payTime = '';
           row.completeTime = '';
@@ -1981,13 +2007,13 @@
       if (viewName === 'storefront') {
         storeView.classList.remove('hidden');
         ordersView.classList.add('hidden');
-        navStore.className = 'w-10 h-10 hairline-border flex items-center justify-center bg-[#111111] text-white';
-        navOrders.className = 'relative w-10 h-10 hairline-border flex items-center justify-center bg-white text-[#111111] hover:border-[#111111]';
+        navStore.className = 'w-10 h-10 border border-[#262626] flex items-center justify-center bg-[#353535] text-white transition-colors';
+        navOrders.className = 'relative w-10 h-10 border border-[#262626] flex items-center justify-center bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors';
       } else {
         storeView.classList.add('hidden');
         ordersView.classList.remove('hidden');
-        navOrders.className = 'relative w-10 h-10 hairline-border flex items-center justify-center bg-[#111111] text-white';
-        navStore.className = 'w-10 h-10 hairline-border flex items-center justify-center bg-white text-[#111111] hover:border-[#111111]';
+        navOrders.className = 'relative w-10 h-10 border border-[#262626] flex items-center justify-center bg-[#353535] text-white transition-colors';
+        navStore.className = 'w-10 h-10 border border-[#262626] flex items-center justify-center bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors';
         updateMemberBadges();
         renderMemberCenterCart();
         renderOrdersView();
@@ -2041,9 +2067,10 @@
 
         const btn = document.createElement('button');
         btn.type = 'button';
+        
         btn.className = isSelected
-          ? 'px-4 py-2 text-xs tracking-wider whitespace-nowrap bg-[#111111] text-white hairline-border-dark'
-          : 'px-4 py-2 text-xs tracking-wider whitespace-nowrap bg-white text-[#555555] hover:text-[#111111] hairline-border';
+          ? 'px-4 py-2 text-xs tracking-wider whitespace-nowrap bg-[#353535] text-white border border-[#353535] transition-all'
+          : 'px-4 py-2 text-xs tracking-wider whitespace-nowrap bg-white text-[#262626] border border-[#262626] hover:bg-[#353535] hover:text-white transition-all';
         btn.textContent = cat === 'ALL' ? ('全部專櫃 (' + count + ')') : (cat + ' (' + count + ')');
         btn.addEventListener('click', function() {
           state.selectedCategory = cat;
@@ -2101,39 +2128,20 @@
         const specsSummary = zone.variants.map(function(v) { return (v.color ? v.color + '·' : '') + (v.spec || v.productName); }).join(' ／ ');
 
         const card = document.createElement('article');
-        card.className = 'product-card flex flex-col justify-between cursor-pointer group';
+        
+        card.className = 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col justify-between cursor-pointer group overflow-hidden border border-white';
         card.innerHTML = '<div>' +
-          '<div class="aspect-square w-full bg-[#FAFAFA] hairline-b overflow-hidden relative">' +
-            '<img src="' + imgList[0] + '" alt="' + zone.mainTitle + '" class="w-full h-full object-cover" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';" />' +
-            '<div class="absolute top-3 left-3">' +
-              '<span class="px-2.5 py-1 text-[11px] tracking-widest bg-[#111111] text-white">' + zone.category + '</span>' +
-            '</div>' +
-            '<div class="absolute bottom-3 right-3 px-2.5 py-1 text-[11px] bg-white/95 hairline-border text-[#111111]">' +
-              zone.variants.length + ' 款規格可選' +
-            '</div>' +
+          '<div class="aspect-[4/5] sm:aspect-square w-full bg-white overflow-hidden flex items-center justify-center">' +
+            '<img src="' + imgList[0] + '" alt="' + zone.mainTitle + '" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';" />' +
           '</div>' +
-          '<div class="p-5">' +
-            '<div class="flex items-center justify-between text-[11px] text-[#777777] mb-1.5">' +
-              '<span>' + (zone.memberLimit || '公開展售') + '</span>' +
-              '<span>剩餘 ' + totalStock + ' 件</span>' +
+          '<div class="pt-3.5 pb-4 px-3 bg-white text-center flex flex-col items-center justify-center">' +
+            '<h3 class="text-[13px] sm:text-sm font-normal text-[#262626] tracking-wide mb-1.5 group-hover:text-[#1D4ED8] transition-colors">' + zone.mainTitle + '</h3>' +
+            '<div class="text-xs sm:text-[13px] font-semibold text-[#1D4ED8] tracking-wider font-sans">' +
+              'NT$ ' + (isVipMember ? minVipPrice : minPrice).toLocaleString() +
+              (zone.variants.length > 1 ? '<span class="text-[10px] font-normal text-[#6B7280] ml-1">起</span>' : '') +
             '</div>' +
-            '<h3 class="font-editorial text-xl font-normal text-[#111111] mb-1.5 group-hover:underline">' + zone.mainTitle + '</h3>' +
-            '<p class="text-xs text-[#666666] line-clamp-2 mb-3 leading-relaxed">' + (zone.description || '專櫃嚴選保養配方') + '</p>' +
-            '<div class="p-2.5 bg-[#FAFAFA] hairline-border text-[11px] text-[#555555] truncate">規格：' + specsSummary + '</div>' +
+            (isVipMember ? '<div class="text-[10px] text-[#9CA3AF] line-through mt-0.5 font-sans">原價 NT$ ' + minPrice.toLocaleString() + '</div>' : '') +
           '</div>' +
-        '</div>' +
-        '<div class="px-5 py-4 hairline-t bg-white flex items-center justify-between">' +
-          '<div>' +
-            '<div class="flex items-baseline space-x-2">' +
-              '<span class="text-base font-medium font-mono text-[#111111]">NT$ ' + (isVipMember ? minVipPrice : minPrice).toLocaleString() + '</span>' +
-              (zone.variants.length > 1 ? '<span class="text-[11px] text-[#777777]">起</span>' : '') +
-              (isVipMember ? '<span class="text-[11px] text-[#888888] line-through font-mono">NT$ ' + minPrice.toLocaleString() + '</span>' : '') +
-            '</div>' +
-            '<div class="text-[11px] text-[#666666]">VIP 優惠價 NT$ ' + minVipPrice.toLocaleString() + '</div>' +
-          '</div>' +
-          '<span class="w-9 h-9 hairline-border flex items-center justify-center group-hover:bg-[#111111] group-hover:text-white group-hover:border-[#111111]" title="選擇商品規格">' +
-            '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>' +
-          '</span>' +
         '</div>';
 
         card.addEventListener('click', function() {
@@ -2167,48 +2175,139 @@
       const selectedVar = zone.variants.find(function(v) { return v._rowId === state.selectedVariantRowId; }) || zone.variants[0];
       const isVip = state.currentMember && state.currentMember.memberType === 'VIP會員';
 
+      
       const imgList = parseProductImages(selectedVar.images, selectedVar.productName);
       const fallbackImg = makeMinimalistFallbackSvg(selectedVar.productName);
+      state.galleryImages = (imgList && imgList.length > 0) ? imgList : [fallbackImg];
+      state.galleryIndex = 0;
 
-      const mainImg = document.getElementById('modalMainImage');
-      mainImg.onerror = function() { this.onerror = null; this.src = fallbackImg; };
-      mainImg.src = imgList[0];
+      
+      function updateGalleryDisplay(targetIdx) {
+        if (!state.galleryImages || state.galleryImages.length === 0) return;
+        if (targetIdx < 0) targetIdx = state.galleryImages.length - 1;
+        if (targetIdx >= state.galleryImages.length) targetIdx = 0;
+        state.galleryIndex = targetIdx;
 
-      const thumbsContainer = document.getElementById('modalThumbnailsContainer');
-      thumbsContainer.innerHTML = '';
-      imgList.forEach(function(imgUrl, idx) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = idx === 0
-          ? 'aspect-square hairline-border-dark overflow-hidden bg-[#FAFAFA]'
-          : 'aspect-square hairline-border hover:border-[#111111] overflow-hidden bg-[#FAFAFA]';
-        btn.innerHTML = '<img src="' + imgUrl + '" alt="商品縮圖 ' + (idx + 1) + '" class="w-full h-full object-cover" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';" />';
-        btn.addEventListener('click', function() {
-          mainImg.src = imgUrl;
+        const mainImg = document.getElementById('modalGalleryMainImg');
+        if (mainImg) {
+          mainImg.style.opacity = '0.4';
+          mainImg.src = state.galleryImages[targetIdx];
+          mainImg.onerror = function() { this.onerror = null; this.src = fallbackImg; };
+          setTimeout(function() { mainImg.style.opacity = '1'; }, 80);
+        }
+
+        const counter = document.getElementById('modalGalleryCounter');
+        if (counter) {
+          counter.textContent = (targetIdx + 1) + ' / ' + state.galleryImages.length;
+        }
+
+        
+        const thumbs = document.querySelectorAll('.modal-gallery-thumb');
+        thumbs.forEach(function(th, i) {
+          if (i === targetIdx) {
+            th.className = 'modal-gallery-thumb aspect-square w-14 h-14 shrink-0 rounded-sm overflow-hidden border-2 border-[#1D4ED8] shadow-sm cursor-pointer transition-all opacity-100';
+          } else {
+            th.className = 'modal-gallery-thumb aspect-square w-14 h-14 shrink-0 rounded-sm overflow-hidden border border-[#D1D5DB] hover:border-[#262626] opacity-60 hover:opacity-100 cursor-pointer transition-all';
+          }
         });
-        thumbsContainer.appendChild(btn);
-      });
+      }
 
+      
+      const thumbsContainer = document.getElementById('modalThumbnailsList');
+      if (thumbsContainer) {
+        thumbsContainer.innerHTML = '';
+        state.galleryImages.forEach(function(imgUrl, idx) {
+          const thumbBtn = document.createElement('button');
+          thumbBtn.type = 'button';
+          thumbBtn.className = 'modal-gallery-thumb aspect-square w-14 h-14 shrink-0 rounded-sm overflow-hidden border ' + (idx === 0 ? 'border-2 border-[#1D4ED8] opacity-100' : 'border-[#D1D5DB] opacity-60') + ' cursor-pointer bg-white';
+          thumbBtn.innerHTML = '<img src="' + imgUrl + '" alt="小縮圖 ' + (idx + 1) + '" class="w-full h-full object-cover" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';" />';
+          thumbBtn.addEventListener('click', function() {
+            updateGalleryDisplay(idx);
+          });
+          thumbsContainer.appendChild(thumbBtn);
+        });
+      }
+
+      
+      updateGalleryDisplay(0);
+
+      
+      const prevBtn = document.getElementById('modalGalleryPrevBtn');
+      const nextBtn = document.getElementById('modalGalleryNextBtn');
+      if (prevBtn) {
+        prevBtn.onclick = function(e) {
+          e.stopPropagation();
+          updateGalleryDisplay(state.galleryIndex - 1);
+        };
+      }
+      if (nextBtn) {
+        nextBtn.onclick = function(e) {
+          e.stopPropagation();
+          updateGalleryDisplay(state.galleryIndex + 1);
+        };
+      }
+
+      
+      const galleryBox = document.getElementById('modalGalleryContainer');
+      if (galleryBox && !galleryBox._swipeBound) {
+        galleryBox._swipeBound = true;
+        let touchX = 0;
+        let touchY = 0;
+        let isHorizontalSwipe = false;
+
+        galleryBox.addEventListener('touchstart', function(e) {
+          if (e.touches.length === 1) {
+            touchX = e.touches[0].clientX;
+            touchY = e.touches[0].clientY;
+            isHorizontalSwipe = false;
+          }
+        }, { passive: true });
+
+        galleryBox.addEventListener('touchmove', function(e) {
+          if (e.touches.length === 1) {
+            const dx = e.touches[0].clientX - touchX;
+            const dy = e.touches[0].clientY - touchY;
+            
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+              isHorizontalSwipe = true;
+              if (e.cancelable) e.preventDefault(); 
+            }
+          }
+        }, { passive: false });
+
+        galleryBox.addEventListener('touchend', function(e) {
+          if (isHorizontalSwipe && e.changedTouches.length === 1) {
+            const dx = e.changedTouches[0].clientX - touchX;
+            if (dx < -30) {
+              updateGalleryDisplay(state.galleryIndex + 1); 
+            } else if (dx > 30) {
+              updateGalleryDisplay(state.galleryIndex - 1); 
+            }
+          }
+          isHorizontalSwipe = false;
+        }, { passive: true });
+      }
+
+      
+      document.getElementById('modalProductTitle').textContent = selectedVar.productName || '-';
+      document.getElementById('modalCategoryText').textContent = selectedVar.category || '-';
+      document.getElementById('modalShelfCodeText').textContent = selectedVar.shelfCode || '-';
+      document.getElementById('modalProductCodeText').textContent = selectedVar.productCode || '-';
+      document.getElementById('modalAttrType').textContent = selectedVar.productType || '-';
+      document.getElementById('modalAttrColorSpec').textContent = ('顏色：' + (selectedVar.color || '-') + ' ｜ 規格：' + (selectedVar.spec || '-')).trim();
+      document.getElementById('modalAttrIngredient').textContent = selectedVar.ingredient || '-';
+      document.getElementById('modalProductDesc').textContent = selectedVar.description || '（尚無詳細說明）';
       document.getElementById('modalAccessBadge').textContent = selectedVar.memberLimit || '公開展售';
-      document.getElementById('modalSalePeriod').textContent = (selectedVar.saleStart || '即日起') + ' ～ ' + (selectedVar.saleEnd || '長期展售');
-      document.getElementById('modalSelectedProductCode').textContent = selectedVar.productCode;
-      document.getElementById('modalProductTitle').textContent = selectedVar.productName;
-      document.getElementById('modalProductDesc').textContent = selectedVar.description || '專櫃嚴選保養商品';
 
       const regPrice = Number(selectedVar.price || 0);
       const vipPrice = Number(selectedVar.vipPrice || Math.round(regPrice * 0.85));
       const activePrice = isVip ? vipPrice : regPrice;
 
       document.getElementById('modalActivePrice').textContent = 'NT$ ' + activePrice.toLocaleString();
-      document.getElementById('modalOriginalPriceStrike').textContent = isVip ? ('原價 NT$ ' + regPrice.toLocaleString()) : '';
-      document.getElementById('modalVipPriceNote').textContent = isVip
-        ? ('已享 VIP 優惠價 NT$ ' + vipPrice.toLocaleString())
-        : ('VIP 會員價 NT$ ' + vipPrice.toLocaleString());
-
-      document.getElementById('modalSelectedStock').textContent = String(selectedVar.remainingQty);
-      document.getElementById('modalAttrType').textContent = selectedVar.productType || '-';
-      document.getElementById('modalAttrColorSpec').textContent = ((selectedVar.color || '') + ' ' + (selectedVar.spec || '')).trim() || '-';
-      document.getElementById('modalAttrIngredient').textContent = selectedVar.ingredient || '-';
+      document.getElementById('modalVipPriceNote').textContent = 'NT$ ' + vipPrice.toLocaleString() + (isVip ? '（您目前已享有 VIP 優惠價）' : '（升等 VIP 後即可享此優惠價）');
+      document.getElementById('modalSelectedStock').textContent = selectedVar.remainingQty + ' 件';
+      document.getElementById('modalSoldQtyText').textContent = (selectedVar.soldQty || 0) + ' 件';
+      document.getElementById('modalSalePeriod').textContent = (selectedVar.saleStart || '即日起') + ' 至 ' + (selectedVar.saleEnd || '長期展售');
 
       const listEl = document.getElementById('modalVariantsList');
       listEl.innerHTML = '';
@@ -2244,12 +2343,16 @@
     
     function getActiveCartRows() {
       if (!state.currentMember) return [];
-      return state.orders.filter(function(o) { return o.memberId === state.currentMember.memberId && o.orderStatus === '購物車'; });
+      return state.orders.filter(function(o) {
+        return o.memberId === state.currentMember.memberId && (o.orderStatus === '選購' || o.orderStatus === '購物車');
+      });
     }
 
     function getSubmittedOrdersGrouped() {
       if (!state.currentMember) return [];
-      const nonCart = state.orders.filter(function(o) { return o.memberId === state.currentMember.memberId && o.orderStatus !== '購物車'; });
+      const nonCart = state.orders.filter(function(o) {
+        return o.memberId === state.currentMember.memberId && o.orderStatus !== '選購' && o.orderStatus !== '購物車';
+      });
       const map = new Map();
       nonCart.forEach(function(row) {
         const key = row.orderNo || ('ORDER-ROW-' + row._rowId);
@@ -2378,27 +2481,76 @@
       });
     }
 
+    
     async function updateCartItemQty(productRowId, newAbsoluteQty, triggerBtn) {
       if (!state.currentMember) return;
+      const targetProduct = state.shelfProducts.find(function(p) { return p._rowId === Number(productRowId); });
+      if (!targetProduct) return;
+
+      
+      if (newAbsoluteQty > Number(targetProduct.remainingQty || 0)) {
+        showToast('選購數量超過目前架上剩餘庫存（' + targetProduct.remainingQty + ' 件）', 'error');
+        return;
+      }
+
+      
+      const rollbackOrdersSnapshot = JSON.parse(JSON.stringify(state.orders));
+
+      
+      const isVip = state.currentMember.memberType === 'VIP會員';
+      const unitPrice = isVip
+        ? Number(targetProduct.vipPrice || Math.round(targetProduct.price * 0.85))
+        : Number(targetProduct.price);
+
+      let targetItem = state.orders.find(function(o) {
+        return o.memberId === state.currentMember.memberId &&
+          (o.orderStatus === '選購' || o.orderStatus === '購物車') &&
+          o.shelfCode === targetProduct.shelfCode &&
+          o.productCode === targetProduct.productCode &&
+          o.spec === targetProduct.spec;
+      });
+
+      if (newAbsoluteQty <= 0) {
+        state.orders = state.orders.filter(function(o) { return o !== targetItem; });
+      } else if (targetItem) {
+        targetItem.buyQty = newAbsoluteQty;
+        targetItem.subtotal = unitPrice * newAbsoluteQty;
+      }
+
+      
+      renderCartDrawer();
+      renderMemberCenterCart();
+      renderOrdersBadgeCount();
+
+      
       try {
-        const res = await runWithButtonProgress(triggerBtn, null, '更新', function() {
-          return callBackend('syncCartItem', {
-            memberId: state.currentMember.memberId,
-            productRowId: productRowId,
-            absoluteQty: newAbsoluteQty
-          });
+        const res = await callBackend('syncCartItem', {
+          memberId: state.currentMember.memberId,
+          productRowId: productRowId,
+          absoluteQty: newAbsoluteQty
         });
-        if (res.status !== 'success') {
-          showToast(res.message || '更新購物車失敗', 'error');
-          return;
+
+        if (res.status === 'success' && res.data && res.data.orders) {
+          state.orders = res.data.orders;
+          renderCartDrawer();
+          renderMemberCenterCart();
+          renderOrdersBadgeCount();
+          
+          showToast(newAbsoluteQty === 0 ? '✓ 購物車已更新' : '✓ 商品數量已更新', 'success');
+        } else {
+          
+          state.orders = rollbackOrdersSnapshot;
+          renderCartDrawer();
+          renderMemberCenterCart();
+          renderOrdersBadgeCount();
+          showToast(res.message || '更新失敗，已為您還原數量', 'error');
         }
-        state.orders = res.data.orders;
+      } catch (err) {
+        state.orders = rollbackOrdersSnapshot;
         renderCartDrawer();
         renderMemberCenterCart();
         renderOrdersBadgeCount();
-        showToast(newAbsoluteQty === 0 ? '已從購物車移除商品' : '已更新購物車數量與金額', 'success');
-      } catch (err) {
-        showToast('更新購物車發生錯誤: ' + err.message, 'error');
+        showToast('連線異常，已為您還原購物車數量', 'error');
       }
     }
 
@@ -2462,13 +2614,13 @@
 
       let stage = 1; 
       if (s.includes('已收貨') || s === '收貨' || s.includes('已簽收') || s.includes('簽收') || s === '完成') {
-        stage = 5;
+        stage = 5; 
       } else if (s.includes('已到貨') || s.includes('到貨')) {
-        stage = 4;
+        stage = 4; 
       } else if (s.includes('配送') || s.includes('配貨')) {
-        stage = 3;
+        stage = 3; 
       } else if (s.includes('已出貨') || s === '出貨') {
-        stage = 2;
+        stage = 2; 
       } else {
         stage = 1; 
       }
@@ -2743,7 +2895,7 @@
         state.orders = res.data.orders;
         state.shelfProducts = res.data.shelfProducts || state.shelfProducts;
         renderAllViews();
-        showToast('訂單已取消，商品已成功退回購物車！', 'success');
+        showToast('✓ 訂單已更新', 'success');
       } catch (err) {
         showToast('取消訂單異常: ' + err.message, 'error');
       }
@@ -2832,13 +2984,13 @@
       const registerForm = document.getElementById('registerForm');
 
       if (mode === 'login') {
-        tabLogin.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-[#111111] text-white';
-        tabRegister.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-white text-[#666666] hover:text-[#111111]';
+        tabLogin.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-[#353535] text-white transition-colors';
+        tabRegister.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors';
         loginBox.classList.remove('hidden');
         registerForm.classList.add('hidden');
       } else {
-        tabRegister.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-[#111111] text-white';
-        tabLogin.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-white text-[#666666] hover:text-[#111111]';
+        tabRegister.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-[#353535] text-white transition-colors';
+        tabLogin.className = 'py-2.5 text-xs tracking-[0.14em] font-medium bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors';
         registerForm.classList.remove('hidden');
         loginBox.classList.add('hidden');
       }
@@ -2999,6 +3151,22 @@
       document.getElementById('brandHomeBtn').addEventListener('click', function() {
         if (state.currentMember) switchMainView('storefront');
       });
+
+      
+      const allProdBtn = document.getElementById('browseAllProductsBtn');
+      if (allProdBtn) {
+        allProdBtn.addEventListener('click', function() {
+          state.selectedCategory = 'ALL';
+          state.searchKeyword = '';
+          const searchInput = document.getElementById('productSearchInput');
+          if (searchInput) searchInput.value = '';
+          document.getElementById('storeActiveCategoryLabel').textContent = '全類專櫃';
+          renderCategoryTabs();
+          renderProductGrid();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
       document.getElementById('navTabStore').addEventListener('click', function() { switchMainView('storefront'); });
       document.getElementById('navTabOrders').addEventListener('click', function() { switchMainView('orders'); });
       document.getElementById('backToStoreFromOrdersBtn').addEventListener('click', function() { switchMainView('storefront'); });
@@ -3018,7 +3186,7 @@
               state.returns = (res.data.returns || []).filter(function(r) { return r.memberId === state.currentMember.memberId; });
             }
             renderAllViews();
-            showToast('已更新最新專櫃商品與訂單狀態', 'success');
+            showToast('✓ 專櫃商品已更新', 'success');
           }
         } catch (err) {
           showToast('重新整理失敗: ' + err.message, 'error');
@@ -3051,7 +3219,7 @@
           if (res.status === 'success' && res.data && res.data.orders) {
             state.orders = res.data.orders;
           }
-          showToast('收貨資訊已更新保存', 'success');
+          showToast('✓ 收件資料已更新', 'success');
         } catch (err) {
           showToast('儲存異常: ' + err.message, 'error');
         }
@@ -3085,32 +3253,116 @@
         inp.value = String(v);
       });
 
-      document.getElementById('modalAddToCartBtn').addEventListener('click', async () => {
+      
+      document.getElementById('modalAddToCartBtn').addEventListener('click', async function() {
         if (!state.currentMember || !state.selectedVariantRowId) return;
         const qty = Math.max(1, Number(document.getElementById('modalQtyInput').value || 1));
-        const btn = document.getElementById('modalAddToCartBtn');
+        const zone = state.activeShelfGroup;
+        const selectedVar = zone ? zone.variants.find(function(x) { return x._rowId === state.selectedVariantRowId; }) : null;
+        if (!selectedVar) return;
+
+        
+        const maxStock = Number(selectedVar.remainingQty || 0);
+        if (qty > maxStock) {
+          showToast('選購數量已超過目前架上剩餘庫存（' + maxStock + ' 件）', 'error');
+          return;
+        }
+
+        const isVip = state.currentMember.memberType === 'VIP會員';
+        const activePrice = isVip
+          ? Number(selectedVar.vipPrice || Math.round(selectedVar.price * 0.85))
+          : Number(selectedVar.price);
+
+        
+        const rollbackOrdersSnapshot = JSON.parse(JSON.stringify(state.orders));
+
+        
+        let existingItem = state.orders.find(function(o) {
+          return o.memberId === state.currentMember.memberId &&
+            (o.orderStatus === '選購' || o.orderStatus === '購物車') &&
+            o.shelfCode === selectedVar.shelfCode &&
+            o.productCode === selectedVar.productCode &&
+            o.spec === selectedVar.spec;
+        });
+
+        if (existingItem) {
+          existingItem.buyQty = Number(existingItem.buyQty || 0) + qty;
+          existingItem.subtotal = activePrice * existingItem.buyQty;
+        } else {
+          state.orders.push({
+            _rowId: Date.now(), 
+            shopTime: formatNowTimestamp('-').formatted,
+            category: selectedVar.category,
+            productCode: selectedVar.productCode,
+            productName: selectedVar.productName,
+            productType: selectedVar.productType,
+            color: selectedVar.color,
+            spec: selectedVar.spec,
+            ingredient: selectedVar.ingredient,
+            invSoldQty: selectedVar.soldQty || 0,
+            shelfCode: selectedVar.shelfCode,
+            images: selectedVar.images,
+            description: selectedVar.description,
+            memberLimit: selectedVar.memberLimit,
+            price: selectedVar.price,
+            vipPrice: selectedVar.vipPrice,
+            buyQty: qty,
+            subtotal: activePrice * qty,
+            memberId: state.currentMember.memberId,
+            memberType: state.currentMember.memberType,
+            memberName: state.currentMember.name,
+            memberPhone: state.currentMember.phone,
+            memberLineId: state.currentMember.lineId,
+            memberEmail: state.currentMember.email,
+            orderStatus: '選購',
+            recipientName: '',
+            recipientPhone: '',
+            recipientAddress: '',
+            deliveryTimeSlot: '',
+            note: '',
+            payTime: '',
+            payMethod: '',
+            completeTime: '',
+            orderNo: ''
+          });
+        }
+
+        
+        renderCartDrawer();
+        renderMemberCenterCart();
+        showToast('已加入購物車', 'success');
+
+        
+        document.getElementById('productDetailModal').classList.add('hidden');
+        document.getElementById('cartDrawerBackdrop').classList.remove('hidden');
+        switchCartDrawerStep(1);
+
+        
         try {
-          const res = await runWithButtonProgress(btn, null, '加入中', () =>
-            callBackend('syncCartItem', {
-              memberId: state.currentMember.memberId,
-              productRowId: state.selectedVariantRowId,
-              deltaQty: qty
-            })
-          );
-          if (res.status !== 'success') {
-            showToast(res.message || '加入購物車失敗', 'error');
-          } else {
+          const res = await callBackend('syncCartItem', {
+            memberId: state.currentMember.memberId,
+            productRowId: state.selectedVariantRowId,
+            deltaQty: qty
+          });
+
+          if (res.status === 'success' && res.data && res.data.orders) {
+            
             state.orders = res.data.orders;
             renderCartDrawer();
             renderMemberCenterCart();
-            setTimeout(() => {
-              document.getElementById('productDetailModal').classList.add('hidden');
-              document.getElementById('cartDrawerBackdrop').classList.remove('hidden');
-              switchCartDrawerStep(1);
-            }, 250);
+          } else {
+            
+            state.orders = rollbackOrdersSnapshot;
+            renderCartDrawer();
+            renderMemberCenterCart();
+            showToast(res.message || '加入購物車失敗，已還原狀態', 'error');
           }
         } catch (err) {
-          showToast('加入購物車失敗: ' + err.message, 'error');
+          
+          state.orders = rollbackOrdersSnapshot;
+          renderCartDrawer();
+          renderMemberCenterCart();
+          showToast('連線中斷，已為您還原購物車', 'error');
         }
       });
 
