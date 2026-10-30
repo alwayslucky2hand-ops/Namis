@@ -388,7 +388,7 @@
               <span id="profileMemberVipStart" class="font-mono text-[#111111]">-</span>
             </div>
             <div id="profileVipExpireRow" class="hidden justify-between py-1">
-              <span class="text-[#666666]">VIP 到期時間</span>
+              <span class="text-[#666666]">VIP 到期日</span>
               <span id="profileMemberVipExpire" class="font-mono font-medium text-[#15803D]">-</span>
             </div>
           </div>
@@ -573,6 +573,11 @@
           <div>
             <div class="text-xs text-[#6B7280]">VIP 專屬優惠價</div>
             <div id="modalVipPriceNote" class="text-xs font-medium text-[#047857] font-mono mt-1"></div>
+          </div>
+
+          <div>
+            <div class="text-xs text-[#6B7280]">經銷商專屬費用（1/2 批發價）</div>
+            <div id="modalDisPriceNote" class="text-xs font-semibold text-[#1E3A8A] font-mono mt-1"></div>
           </div>
 
           <div>
@@ -1540,12 +1545,25 @@
         const phoneInput = String(payload.phone || '').trim();
         const cleanDigits = phoneInput.replace(/\D/g, '');
 
-        const found = db.members.find(m => {
+        const matchedList = db.members.filter(m => {
           const sameName = String(m.name || '').trim() === nameInput;
           const mDigits = String(m.phone || '').replace(/\D/g, '');
           const matchPhone = (mDigits === cleanDigits) || (cleanDigits.length >= 8 && mDigits.endsWith(cleanDigits.slice(-9)));
           return sameName && matchPhone;
         });
+
+        if (matchedList.length === 0) {
+          return { status: 'error', code: 'NOT_REGISTERED', message: '查無此會員紀錄，請確認姓名與電話或前往註冊。' };
+        }
+
+        const disM = matchedList.find(m => String(m.memberId || '').toUpperCase().startsWith('DIS'));
+        let found = null;
+        if (disM && disM.disExpireDate && new Date(disM.disExpireDate).getTime() >= Date.now()) {
+          found = disM;
+        } else {
+          const memM = matchedList.find(m => String(m.memberId || '').toUpperCase().startsWith('MEM'));
+          found = memM || disM || matchedList[0];
+        }
 
         if (!found) {
           return { status: 'error', code: 'NOT_REGISTERED', message: '查無此會員紀錄，請確認姓名與電話或前往註冊。' };
@@ -2240,10 +2258,20 @@
 
       const tierBadge = document.getElementById('profileMemberTier');
       if (tierBadge) {
-        tierBadge.textContent = m.memberType;
-        tierBadge.className = m.memberType === 'VIP會員'
-          ? 'px-2.5 py-0.5 text-xs bg-[#111111] text-white'
-          : 'px-2.5 py-0.5 text-xs hairline-border bg-[#FAFAFA] text-[#111111]';
+        const isDis = String(m.memberId || '').toUpperCase().startsWith('DIS');
+        
+        const badgeLabel = isDis 
+          ? ('經銷商（' + m.memberId + '）') 
+          : (m.memberType + '（' + m.memberId + '）');
+        tierBadge.textContent = badgeLabel;
+
+        if (isDis) {
+          tierBadge.className = 'px-2.5 py-0.5 text-xs bg-[#1E3A8A] text-white font-medium';
+        } else if (m.memberType === 'VIP會員') {
+          tierBadge.className = 'px-2.5 py-0.5 text-xs bg-[#111111] text-white font-medium';
+        } else {
+          tierBadge.className = 'px-2.5 py-0.5 text-xs hairline-border bg-[#FAFAFA] text-[#111111] font-medium';
+        }
       }
 
       document.getElementById('profileMemberName').textContent = m.name || '-';
@@ -2279,11 +2307,8 @@
           vipExpireRow.classList.add('flex');
         }
         document.getElementById('profileMemberVipStart').textContent = vipValidity.vipStartTime;
-        document.getElementById('profileMemberVipExpire').textContent = 
-          vipValidity.vipExpireDate + 
-          (vipValidity.isRenewed ? '（累積達標已自動順延 ' + vipValidity.totalRenewedYears + ' 年）' : '') + 
-          ' ｜ 本期累積 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + 
-          (vipValidity.renewalDiff > 0 ? '（差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + ' 續約）' : '（本期已達標）');
+        
+        document.getElementById('profileMemberVipExpire').textContent = vipValidity.vipExpireDate;
       } else {
         if (vipStartRow) {
           vipStartRow.classList.add('hidden');
@@ -2325,8 +2350,28 @@
     
     
     
+    
+    function getMemberProductPrice(product, member) {
+      const regPrice = Number(product.price || 0);
+      if (!member) return regPrice;
+      const isDis = String(member.memberId || '').toUpperCase().startsWith('DIS') || member.memberType === '經銷商';
+      if (isDis) return Math.round(regPrice * 0.5); 
+      const isVip = member.memberType === 'VIP會員';
+      if (isVip) return Number(product.vipPrice || Math.round(regPrice * 0.85));
+      return regPrice;
+    }
+
     function getGroupedShelfZones() {
-      const activeRows = state.shelfProducts.filter(function(p) { return !p.status || p.status === '上架中'; });
+      const m = state.currentMember;
+      const isDis = m && (String(m.memberId || '').toUpperCase().startsWith('DIS') || m.memberType === '經銷商');
+
+      const activeRows = state.shelfProducts.filter(function(p) {
+        if (p.status && p.status !== '上架中') return false;
+        
+        const isDisExclusive = (p.category === '經銷商專屬') || (p.memberLimit === '經銷商專屬');
+        if (isDisExclusive && !isDis) return false;
+        return true;
+      });
       const groupMap = new Map();
 
       activeRows.forEach(function(row) {
@@ -2416,7 +2461,9 @@
         return;
       }
 
-      const isVipMember = state.currentMember && state.currentMember.memberType === 'VIP會員';
+      const m = state.currentMember;
+      const isDisMember = m && (String(m.memberId || '').toUpperCase().startsWith('DIS') || m.memberType === '經銷商');
+      const isVipMember = m && m.memberType === 'VIP會員';
 
       filtered.forEach(function(zone) {
         const firstVar = zone.variants[0];
@@ -2424,9 +2471,19 @@
         const fallbackImg = makeMinimalistFallbackSvg(zone.mainTitle);
 
         const prices = zone.variants.map(function(v) { return Number(v.price || 0); });
-        const vipPrices = zone.variants.map(function(v) { return Number(v.vipPrice || Math.round(v.price * 0.85)); });
         const minPrice = Math.min.apply(null, prices);
-        const minVipPrice = Math.min.apply(null, vipPrices);
+        const minVipPrice = Math.min.apply(null, zone.variants.map(function(v) { return Number(v.vipPrice || Math.round(v.price * 0.85)); }));
+        const minDisPrice = Math.min.apply(null, zone.variants.map(function(v) { return Math.round(Number(v.price || 0) * 0.5); }));
+
+        let activeDisplayPrice = minPrice;
+        let strikethroughHtml = '';
+        if (isDisMember) {
+          activeDisplayPrice = minDisPrice;
+          strikethroughHtml = '<div class="text-[10px] text-[#9CA3AF] line-through mt-0.5 font-sans">原價 NT$ ' + minPrice.toLocaleString() + '（經銷 5 折）</div>';
+        } else if (isVipMember) {
+          activeDisplayPrice = minVipPrice;
+          strikethroughHtml = '<div class="text-[10px] text-[#9CA3AF] line-through mt-0.5 font-sans">原價 NT$ ' + minPrice.toLocaleString() + '</div>';
+        }
         const totalStock = zone.variants.reduce(function(acc, v) { return acc + Number(v.remainingQty || 0); }, 0);
         const specsSummary = zone.variants.map(function(v) { return (v.color ? v.color + '·' : '') + (v.spec || v.productName); }).join(' ／ ');
 
@@ -2440,10 +2497,10 @@
           '<div class="pt-3.5 pb-4 px-3 bg-white text-center flex flex-col items-center justify-center">' +
             '<h3 class="text-[13px] sm:text-sm font-normal text-[#262626] tracking-wide mb-1.5 group-hover:text-[#1D4ED8] transition-colors">' + zone.mainTitle + '</h3>' +
             '<div class="text-xs sm:text-[13px] font-semibold text-[#1D4ED8] tracking-wider font-sans">' +
-              'NT$ ' + (isVipMember ? minVipPrice : minPrice).toLocaleString() +
+              'NT$ ' + activeDisplayPrice.toLocaleString() +
               (zone.variants.length > 1 ? '<span class="text-[10px] font-normal text-[#6B7280] ml-1">起</span>' : '') +
             '</div>' +
-            (isVipMember ? '<div class="text-[10px] text-[#9CA3AF] line-through mt-0.5 font-sans">原價 NT$ ' + minPrice.toLocaleString() + '</div>' : '') +
+            strikethroughHtml +
           '</div>' +
         '</div>';
 
@@ -2602,12 +2659,20 @@
       document.getElementById('modalProductDesc').textContent = selectedVar.description || '（尚無詳細說明）';
       document.getElementById('modalAccessBadge').textContent = selectedVar.memberLimit || '公開展售';
 
+      const isDis = state.currentMember && (String(state.currentMember.memberId || '').toUpperCase().startsWith('DIS') || state.currentMember.memberType === '經銷商');
       const regPrice = Number(selectedVar.price || 0);
       const vipPrice = Number(selectedVar.vipPrice || Math.round(regPrice * 0.85));
-      const activePrice = isVip ? vipPrice : regPrice;
+      const disPrice = Math.round(regPrice * 0.5); 
 
-      document.getElementById('modalActivePrice').textContent = 'NT$ ' + activePrice.toLocaleString();
-      document.getElementById('modalVipPriceNote').textContent = 'NT$ ' + vipPrice.toLocaleString() + (isVip ? '（您目前已享有 VIP 優惠價）' : '（升等 VIP 後即可享此優惠價）');
+      const activePrice = getMemberProductPrice(selectedVar, state.currentMember);
+
+      document.getElementById('modalActivePrice').textContent = 'NT$ ' + activePrice.toLocaleString() + (isDis ? '（經銷商半價適用）' : '');
+      document.getElementById('modalVipPriceNote').textContent = 'NT$ ' + vipPrice.toLocaleString() + (isVip ? '（您目前享有 VIP 85 折優惠價）' : '（VIP會員享有 85 折）');
+      
+      const disPriceEl = document.getElementById('modalDisPriceNote');
+      if (disPriceEl) {
+        disPriceEl.textContent = 'NT$ ' + disPrice.toLocaleString() + (isDis ? '（您已享有經銷商 1/2 專屬批發價）' : '（僅經銷商身分適用 5 折）');
+      }
       document.getElementById('modalSelectedStock').textContent = selectedVar.remainingQty + ' 件';
       document.getElementById('modalSoldQtyText').textContent = (selectedVar.soldQty || 0) + ' 件';
       document.getElementById('modalSalePeriod').textContent = (selectedVar.saleStart || '即日起') + ' 至 ' + (selectedVar.saleEnd || '長期展售');
@@ -2616,7 +2681,7 @@
       listEl.innerHTML = '';
       zone.variants.forEach(function(v) {
         const isCurrent = v._rowId === selectedVar._rowId;
-        const vPrice = isVip ? Number(v.vipPrice || Math.round(v.price * 0.85)) : Number(v.price);
+        const vPrice = getMemberProductPrice(v, state.currentMember);
         const itemBtn = document.createElement('button');
         itemBtn.type = 'button';
         itemBtn.className = isCurrent
@@ -2693,10 +2758,13 @@
       document.getElementById('headerCartCount').textContent = String(totalQty);
       document.getElementById('drawerCartCountBadge').textContent = totalQty + ' 件';
       document.getElementById('cartSummaryTotalQty').textContent = totalQty + ' 件';
+      const isDisMember = state.currentMember && (String(state.currentMember.memberId || '').toUpperCase().startsWith('DIS') || state.currentMember.memberType === '經銷商');
       document.getElementById('cartSummaryMemberTier').textContent =
-        state.currentMember && state.currentMember.memberType === 'VIP會員'
-          ? 'VIP 會員 85 折優惠價'
-          : '一般會員標準價';
+        isDisMember
+          ? '經銷商 5折 專屬批發價'
+          : (state.currentMember && state.currentMember.memberType === 'VIP會員'
+              ? 'VIP 會員 85 折優惠價'
+              : '一般會員標準價');
 
       const subtotalEl = document.getElementById('cartSummarySubtotal');
       if (subtotalEl) subtotalEl.textContent = 'NT$ ' + subtotal.toLocaleString();
@@ -3658,10 +3726,7 @@
           return;
         }
 
-        const isVip = state.currentMember.memberType === 'VIP會員';
-        const activePrice = isVip
-          ? Number(selectedVar.vipPrice || Math.round(selectedVar.price * 0.85))
-          : Number(selectedVar.price);
+        const activePrice = getMemberProductPrice(selectedVar, state.currentMember);
 
         
         const rollbackOrdersSnapshot = JSON.parse(JSON.stringify(state.orders));
@@ -4090,8 +4155,8 @@
             } else {
               document.getElementById('cartDrawerBackdrop').classList.add('hidden');
               switchMainView('orders');
-              if (resData.upgradedToVip) {
-                showToast(`訂單 ${resData.orderNo} 成立！恭喜單筆滿 NT$ 28,060 已自動為您晉升 VIP 會員！`, 'success');
+              if (resData.willUpgradeOnPayment) {
+                showToast(`訂單 ${resData.orderNo} 建立成功！單筆滿 NT$ 28,000，將於確認收款完成後自動晉升為 VIP 會員（下次起享 85 折優惠）！`, 'success');
               } else {
                 showToast(`訂單成立！訂單編號：${resData.orderNo}`, 'success');
               }
