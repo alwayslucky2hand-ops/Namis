@@ -1702,9 +1702,12 @@
           const cancelLog = '[' + ts.formatted.replace(/-/g, ' ') + ' 客戶前台] 訂單取消退回購物車，狀態：' + oldStatus + ' -> 選購（原訂單號: ' + row.orderNo + '）';
           row.orderStatus = '選購';
           row.updateLog = row.updateLog ? (row.updateLog + '\n' + cancelLog) : cancelLog;
+          
           row.orderNo = '';
           row.payTime = '';
+          row.payMethod = '';
           row.completeTime = '';
+          row.tradeNo = '';
 
           
           const matchedShelf = db.shelfProducts.find(p => p.shelfCode === row.shelfCode && p.productCode === row.productCode && p.spec === row.spec);
