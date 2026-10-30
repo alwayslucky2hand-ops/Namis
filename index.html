@@ -565,14 +565,31 @@
             <div id="modalAccessBadge" class="text-xs text-[#111827] mt-1 break-words"></div>
           </div>
 
-          <div>
-            <div class="text-xs text-[#6B7280]">專櫃售價</div>
-            <div id="modalActivePrice" class="text-base font-semibold text-[#1E40AF] font-mono mt-1"></div>
-          </div>
+          
+          <div class="p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm space-y-2">
+            
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[#64748B]">一般會員價</span>
+              <span id="modalRegPriceText" class="font-mono font-medium text-[#1E293B]">NT$ 0</span>
+            </div>
 
-          <div>
-            <div class="text-xs text-[#6B7280]">VIP 專屬優惠價</div>
-            <div id="modalVipPriceNote" class="text-xs font-medium text-[#047857] font-mono mt-1"></div>
+            
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[#64748B]">VIP 會員價（85折）</span>
+              <span id="modalVipPriceText" class="font-mono font-medium text-[#047857]">NT$ 0</span>
+            </div>
+
+            
+            <div id="modalDisPriceRow" class="hidden flex items-center justify-between text-xs pt-1.5 border-t border-[#E2E8F0]">
+              <span class="text-[#1E3A8A] font-medium">經銷商價（一般會員價 5 折）</span>
+              <span id="modalDisPriceText" class="font-mono font-bold text-[#1E3A8A]">NT$ 0</span>
+            </div>
+
+            
+            <div class="flex items-center justify-between text-xs pt-2 border-t border-[#CBD5E1]">
+              <span class="font-medium text-[#0F172A]" id="modalActivePriceLabel">當前結算價</span>
+              <span id="modalActivePrice" class="text-base font-bold text-[#1D4ED8] font-mono">NT$ 0</span>
+            </div>
           </div>
 
           <div>
@@ -2150,86 +2167,6 @@
     }
 
     function applyLoggedInMember(member, shelfProducts, memberOrders, memberReturns) {
-
-      const cartRows = getActiveCartRows();
-      const cartTotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
-      const isVip = m.memberType === 'VIP會員';
-      const vipThreshold = (typeof VIP_UPGRADE_THRESHOLD !== 'undefined') ? VIP_UPGRADE_THRESHOLD : 28000;
-      const diffVip = Math.max(0, vipThreshold - cartTotal);
-
-      
-      const currentMonth = new Date().getMonth() + 1;
-      const bdaySlash = getMemberBirthdaySlash(m);
-      const memberBirthMonth = getMemberBirthMonth(m);
-      const isBirthdayMonth = memberBirthMonth === currentMonth;
-
-      
-      let vipText = '';
-      const vipValidity = calculateVipValidity(m, state.orders);
-      if (isVip) {
-        if (vipValidity && vipValidity.isRenewed) {
-          vipText = '👑 尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：累積已達標，自動順延 1 年！全館享 85 折。';
-        } else if (vipValidity && vipValidity.isExpiringSoon) {
-          vipText = '⚠️ VIP 到期提醒：將於 ' + vipValidity.vipExpireDate + ' 到期（剩 ' + vipValidity.daysRemaining + ' 天），滿 NT$ 28,000 自動順延！';
-        } else {
-          vipText = '👑 尊榮 VIP 會員：全館商品已自動享有專屬 85 折優惠價。';
-        }
-      } else if (diffVip === 0 && cartTotal > 0) {
-        vipText = '👑 結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！已達升等門檻 🎉';
-      } else {
-        vipText = '👑 結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！差 NT$ ' + diffVip.toLocaleString() + ' 即可升等 🛒';
-      }
-
-      
-      let shippingText = '';
-      if (cartTotal <= 0) {
-        shippingText = '🚚 全館消費滿 NT$ 5,000 即享免運費（未達加收 NT$ 150 運費）';
-      } else if (isBirthdayMonth) {
-        shippingText = '🎂 歡慶本月壽星！全單享專屬免運費禮遇（現省 NT$ 150）';
-      } else if (cartTotal >= 5000) {
-        shippingText = '🚚 本筆已達 NT$ 5,000 免運門檻，享自動免運費優惠 🎉';
-      } else {
-        const diffShipping = 5000 - cartTotal;
-        shippingText = '🚚 差 NT$ ' + diffShipping.toLocaleString() + ' 即可享有免運費（目前運費 NT$ 150，滿 NT$ 5,000 免運）';
-      }
-
-      
-      let bdayGiftText = '';
-      if (isBirthdayMonth) {
-        bdayGiftText = cartTotal > 0
-          ? '🎁 壽星專屬禮遇：購物車已自動免費帶入【妍之馨年度限定尊榮生日禮】！'
-          : '🎁 當月壽星福利：本月消費滿NT$5000即贈專屬生日禮 ＋ 全月免運費！';
-      }
-
-      
-      const combinedBannerHtml = 
-        '<div class="space-y-1">' +
-          '<div class="flex items-center space-x-1.5 font-medium ' + (cartTotal >= 5000 || isBirthdayMonth ? 'text-[#15803D]' : 'text-[#1D4ED8]') + '">' +
-            '<span>' + shippingText + '</span>' +
-          '</div>' +
-          '<div class="text-[#262626]">' +
-            '<span>' + vipText + '</span>' +
-          '</div>' +
-          (bdayGiftText ? '<div class="text-[#15803D] font-medium">' + bdayGiftText + '</div>' : '') +
-        '</div>';
-
-      const storeNoticeEl = document.getElementById('storeVipProgressNotice');
-      const drawerNoticeEl = document.getElementById('drawerVipDiffBanner');
-      const memberCartNoticeEl = document.getElementById('memberCartVipDiffText');
-      const centerNoticeEl = document.getElementById('memberCenterVipNote');
-
-      if (storeNoticeEl) storeNoticeEl.innerHTML = combinedBannerHtml;
-      if (drawerNoticeEl) drawerNoticeEl.innerHTML = combinedBannerHtml;
-      if (memberCartNoticeEl) memberCartNoticeEl.innerHTML = combinedBannerHtml;
-      if (centerNoticeEl) centerNoticeEl.innerHTML = combinedBannerHtml;
-
-      const storeBdayEl = document.getElementById('storeBirthdayNotice');
-      const drawerBdayEl = document.getElementById('drawerBirthdayBanner');
-      if (storeBdayEl) storeBdayEl.classList.add('hidden');
-      if (drawerBdayEl) drawerBdayEl.classList.add('hidden');
-    }
-
-    function applyLoggedInMember(member, shelfProducts, memberOrders, memberReturns) {
       if (member && member.phone) {
         member.phone = formatPhoneStandard(member.phone);
       }
@@ -2478,11 +2415,21 @@
         let activeDisplayPrice = minPrice;
         let strikethroughHtml = '';
         if (isDisMember) {
+          
           activeDisplayPrice = minDisPrice;
-          strikethroughHtml = '<div class="text-[10px] text-[#9CA3AF] line-through mt-0.5 font-sans">原價 NT$ ' + minPrice.toLocaleString() + '（經銷 5 折）</div>';
+          strikethroughHtml = 
+            '<div class="text-[10px] text-[#1E3A8A] font-semibold mt-0.5 font-sans">經銷 5 折價</div>' +
+            '<div class="text-[10px] text-[#9CA3AF] line-through font-sans">一般價 NT$ ' + minPrice.toLocaleString() + '</div>';
         } else if (isVipMember) {
+          
           activeDisplayPrice = minVipPrice;
-          strikethroughHtml = '<div class="text-[10px] text-[#9CA3AF] line-through mt-0.5 font-sans">原價 NT$ ' + minPrice.toLocaleString() + '</div>';
+          strikethroughHtml = 
+            '<div class="text-[10px] text-[#047857] font-medium mt-0.5 font-sans">VIP 85 折價</div>' +
+            '<div class="text-[10px] text-[#9CA3AF] line-through font-sans">一般價 NT$ ' + minPrice.toLocaleString() + '</div>';
+        } else {
+          
+          activeDisplayPrice = minPrice;
+          strikethroughHtml = '<div class="text-[10px] text-[#6B7280] mt-0.5 font-sans">VIP 價 NT$ ' + minVipPrice.toLocaleString() + '</div>';
         }
         const totalStock = zone.variants.reduce(function(acc, v) { return acc + Number(v.remainingQty || 0); }, 0);
         const specsSummary = zone.variants.map(function(v) { return (v.color ? v.color + '·' : '') + (v.spec || v.productName); }).join(' ／ ');
@@ -2660,18 +2607,49 @@
       document.getElementById('modalAccessBadge').textContent = selectedVar.memberLimit || '公開展售';
 
       const isDis = state.currentMember && (String(state.currentMember.memberId || '').toUpperCase().startsWith('DIS') || state.currentMember.memberType === '經銷商');
-      const regPrice = Number(selectedVar.price || 0);
-      const vipPrice = Number(selectedVar.vipPrice || Math.round(regPrice * 0.85));
-      const disPrice = Math.round(regPrice * 0.5); 
+      
+
+      
+      const regPrice = Number(selectedVar.price || 0);                          
+      const vipPrice = Number(selectedVar.vipPrice || Math.round(regPrice * 0.85)); 
+      const disPrice = Math.round(regPrice * 0.5);                                 
 
       const activePrice = getMemberProductPrice(selectedVar, state.currentMember);
 
-      document.getElementById('modalActivePrice').textContent = 'NT$ ' + activePrice.toLocaleString() + (isDis ? '（經銷商半價適用）' : '');
-      document.getElementById('modalVipPriceNote').textContent = 'NT$ ' + vipPrice.toLocaleString() + (isVip ? '（您目前享有 VIP 85 折優惠價）' : '（VIP會員享有 85 折）');
       
-      const disPriceEl = document.getElementById('modalDisPriceNote');
-      if (disPriceEl) {
-        disPriceEl.textContent = 'NT$ ' + disPrice.toLocaleString() + (isDis ? '（您已享有經銷商 1/2 專屬批發價）' : '（僅經銷商身分適用 5 折）');
+      const regPriceEl = document.getElementById('modalRegPriceText');
+      if (regPriceEl) regPriceEl.textContent = 'NT$ ' + regPrice.toLocaleString();
+
+      
+      const vipPriceEl = document.getElementById('modalVipPriceText');
+      if (vipPriceEl) vipPriceEl.textContent = 'NT$ ' + vipPrice.toLocaleString();
+
+      
+      const disRowEl = document.getElementById('modalDisPriceRow');
+      const disPriceEl = document.getElementById('modalDisPriceText');
+      if (disRowEl && disPriceEl) {
+        if (isDis) {
+          disPriceEl.textContent = 'NT$ ' + disPrice.toLocaleString();
+          disRowEl.classList.remove('hidden');
+        } else {
+          disRowEl.classList.add('hidden');
+        }
+      }
+
+      
+      const activePriceEl = document.getElementById('modalActivePrice');
+      const activeLabelEl = document.getElementById('modalActivePriceLabel');
+      if (activePriceEl) activePriceEl.textContent = 'NT$ ' + activePrice.toLocaleString();
+      if (activeLabelEl) {
+        activeLabelEl.textContent = isDis 
+          ? '當前適用結算價（經銷商 5 折）' 
+          : (isVip ? '當前適用結算價（VIP 85 折）' : '當前適用結算價（一般標準價）');
+      }
+      
+      
+      const disPriceNoteEl = document.getElementById('modalDisPriceNote');
+      if (disPriceNoteEl) {
+        disPriceNoteEl.textContent = 'NT$ ' + disPrice.toLocaleString() + (isDis ? '（您已享有經銷商 1/2 專屬批發價）' : '（僅經銷商身分適用 5 折）');
       }
       document.getElementById('modalSelectedStock').textContent = selectedVar.remainingQty + ' 件';
       document.getElementById('modalSoldQtyText').textContent = (selectedVar.soldQty || 0) + ' 件';
@@ -2869,9 +2847,18 @@
         const removeBtn = rowEl.querySelector('[data-action="remove"]');
 
         if (productRowId) {
-          minusBtn.addEventListener('click', function() { updateCartItemQty(productRowId, Number(item.buyQty) - 1, minusBtn); });
-          plusBtn.addEventListener('click', function() { updateCartItemQty(productRowId, Number(item.buyQty) + 1, plusBtn); });
-          removeBtn.addEventListener('click', function() { updateCartItemQty(productRowId, 0, removeBtn); });
+          minusBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); 
+            updateCartItemQty(productRowId, Number(item.buyQty) - 1, minusBtn);
+          });
+          plusBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); 
+            updateCartItemQty(productRowId, Number(item.buyQty) + 1, plusBtn);
+          });
+          removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); 
+            updateCartItemQty(productRowId, 0, removeBtn);
+          });
         }
         listContainer.appendChild(rowEl);
       });
@@ -2953,7 +2940,10 @@
     }
 
     
-    async function updateCartItemQty(productRowId, newAbsoluteQty, triggerBtn) {
+    const cartSyncDebounceTimers = {};
+
+    
+    function updateCartItemQty(productRowId, newAbsoluteQty, triggerBtn) {
       if (!state.currentMember) return;
       const targetProduct = state.shelfProducts.find(function(p) { return p._rowId === Number(productRowId); });
       if (!targetProduct) return;
@@ -2965,13 +2955,7 @@
       }
 
       
-      const rollbackOrdersSnapshot = JSON.parse(JSON.stringify(state.orders));
-
-      
-      const isVip = state.currentMember.memberType === 'VIP會員';
-      const unitPrice = isVip
-        ? Number(targetProduct.vipPrice || Math.round(targetProduct.price * 0.85))
-        : Number(targetProduct.price);
+      const unitPrice = getMemberProductPrice(targetProduct, state.currentMember);
 
       let targetItem = state.orders.find(function(o) {
         return o.memberId === state.currentMember.memberId &&
@@ -2994,35 +2978,45 @@
       renderOrdersBadgeCount();
 
       
-      try {
-        const res = await callBackend('syncCartItem', {
-          memberId: state.currentMember.memberId,
-          productRowId: productRowId,
-          absoluteQty: newAbsoluteQty
-        });
-
-        if (res.status === 'success' && res.data && res.data.orders) {
-          state.orders = res.data.orders;
-          renderCartDrawer();
-          renderMemberCenterCart();
-          renderOrdersBadgeCount();
-          
-          showToast(newAbsoluteQty === 0 ? '✓ 購物車已更新' : '✓ 商品數量已更新', 'success');
-        } else {
-          
-          state.orders = rollbackOrdersSnapshot;
-          renderCartDrawer();
-          renderMemberCenterCart();
-          renderOrdersBadgeCount();
-          showToast(res.message || '更新失敗，已為您還原數量', 'error');
-        }
-      } catch (err) {
-        state.orders = rollbackOrdersSnapshot;
-        renderCartDrawer();
-        renderMemberCenterCart();
-        renderOrdersBadgeCount();
-        showToast('連線異常，已為您還原購物車數量', 'error');
+      if (cartSyncDebounceTimers[productRowId]) {
+        clearTimeout(cartSyncDebounceTimers[productRowId]);
       }
+
+      cartSyncDebounceTimers[productRowId] = setTimeout(async function() {
+        delete cartSyncDebounceTimers[productRowId];
+
+        
+        const currentItem = state.orders.find(function(o) {
+          return o.memberId === state.currentMember.memberId &&
+            (o.orderStatus === '選購' || o.orderStatus === '購物車') &&
+            o.shelfCode === targetProduct.shelfCode &&
+            o.productCode === targetProduct.productCode &&
+            o.spec === targetProduct.spec;
+        });
+        const finalQtyToSend = currentItem ? Number(currentItem.buyQty) : 0;
+
+        try {
+          const res = await callBackend('syncCartItem', {
+            memberId: state.currentMember.memberId,
+            productRowId: productRowId,
+            absoluteQty: finalQtyToSend
+          });
+
+          if (res.status === 'success' && res.data && res.data.orders) {
+            
+            if (!cartSyncDebounceTimers[productRowId]) {
+              state.orders = res.data.orders;
+              renderCartDrawer();
+              renderMemberCenterCart();
+              renderOrdersBadgeCount();
+              showToast(finalQtyToSend === 0 ? '✓ 購物車已更新' : '✓ 商品數量已更新', 'success');
+            }
+          }
+        } catch (err) {
+          
+          console.warn('購物車背景同步稍有延遲:', err);
+        }
+      }, 500);
     }
 
     function switchCartDrawerStep(stepNum) {
@@ -3495,6 +3489,29 @@
           state.returns = res.data.returns || [];
 
           
+          function isDisMemberActive(m) {
+            if (!m || !String(m.memberId || '').toUpperCase().startsWith('DIS') || !m.disExpireDate) return false;
+            const raw = String(m.disExpireDate).trim();
+            const mm = raw.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+            let d;
+            if (mm) {
+              d = new Date(Number(mm[1]), Number(mm[2]) - 1, Number(mm[3]), 23, 59, 59);
+            } else {
+              d = new Date(raw);
+            }
+            return !isNaN(d.getTime()) && d.getTime() >= Date.now();
+          }
+
+          
+          function resolveBestMemberProfile(candidates) {
+            if (!candidates || candidates.length === 0) return null;
+            const disRecord = candidates.find(function(m) { return isDisMemberActive(m); });
+            if (disRecord) return disRecord; 
+            const memRecord = candidates.find(function(m) { return String(m.memberId || '').toUpperCase().startsWith('MEM'); });
+            return memRecord || candidates[0];
+          }
+
+          
           const savedCredentialsRaw = safeGetStorage('YZX_REMEMBER_CREDENTIALS');
           const savedMemberId = safeGetStorage('YZX_ACTIVE_MEMBER_ID');
           let matchedMember = null;
@@ -3503,16 +3520,29 @@
             try {
               const cred = JSON.parse(savedCredentialsRaw);
               const cleanDigits = String(cred.phone || '').replace(/\D/g, '');
-              matchedMember = state.members.find(function(m) {
+              
+              const matchedCandidates = state.members.filter(function(m) {
                 const sameName = String(m.name || '').trim() === String(cred.name || '').trim();
                 const mDigits = String(m.phone || '').replace(/\D/g, '');
                 return sameName && (mDigits === cleanDigits || (cleanDigits.length >= 8 && mDigits.endsWith(cleanDigits.slice(-9))));
               });
+              
+              matchedMember = resolveBestMemberProfile(matchedCandidates);
             } catch (e) {}
           }
 
           if (!matchedMember && savedMemberId) {
-            matchedMember = state.members.find(function(m) { return m.memberId === savedMemberId; });
+            const byIdMatch = state.members.find(function(m) { return m.memberId === savedMemberId; });
+            if (byIdMatch) {
+              
+              const cleanDigits = String(byIdMatch.phone || '').replace(/\D/g, '');
+              const samePersonCandidates = state.members.filter(function(m) {
+                const sameName = String(m.name || '').trim() === String(byIdMatch.name || '').trim();
+                const mDigits = String(m.phone || '').replace(/\D/g, '');
+                return sameName && (mDigits === cleanDigits || (cleanDigits.length >= 8 && mDigits.endsWith(cleanDigits.slice(-9))));
+              });
+              matchedMember = resolveBestMemberProfile(samePersonCandidates);
+            }
           }
 
           if (matchedMember) {
@@ -3837,9 +3867,9 @@
       const cartBackdropEl = document.getElementById('cartDrawerBackdrop');
       if (cartBackdropEl) {
         cartBackdropEl.addEventListener('click', function(e) {
-          const drawerContent = cartBackdropEl.querySelector('.max-w-xl');
           
-          if (drawerContent && !drawerContent.contains(e.target)) {
+          
+          if (e.target === cartBackdropEl) {
             cartBackdropEl.classList.add('hidden');
           }
         });
