@@ -654,48 +654,50 @@
 
       
       <form id="checkoutForm" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5">
-        <div class="p-3.5 bg-white border border-[#BFDBFE] text-xs leading-relaxed text-[#262626] flex items-center space-x-2.5 rounded-sm">
-          <span class="w-2 h-2 rounded-full bg-[#1D4ED8] shrink-0"></span>
-          <span>點擊下方「前往付款」將直接跳轉至 PayUni 安全金流頁進行付款</span>
-        </div>
-
+        
         <div class="space-y-3.5">
-          <div class="flex items-center justify-between pb-2 hairline-b">
-            <span class="text-xs font-medium tracking-wider">收貨配送資訊</span>
-            <button type="button" id="fillMemberDefaultRecipientBtn" class="text-xs px-2.5 py-1 hairline-border bg-[#FAFAFA] hover:border-[#111111]">
+          <div class="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+            <span class="text-xs font-semibold tracking-wider text-[#262626]">收貨配送資訊</span>
+            <button type="button" id="fillMemberDefaultRecipientBtn" class="text-xs px-2.5 py-1 border border-[#262626] bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors">
               帶入資料
             </button>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-[#555555] mb-1">收件人姓名 *</label>
+              <label class="block text-xs text-[#4B5563] mb-1">收件人姓名 *</label>
               <input type="text" id="shipRecipientName" required placeholder="請輸入收貨人真實姓名" class="input-minimal" />
             </div>
             <div>
-              <label class="block text-xs text-[#555555] mb-1">收件人電話 *</label>
+              <label class="block text-xs text-[#4B5563] mb-1">收件人電話 *</label>
               <input type="tel" id="shipRecipientPhone" required placeholder="例如：(&#43;886)912345678" class="input-minimal" />
             </div>
           </div>
 
           <div>
-            <label class="block text-xs text-[#555555] mb-1">收件人地址 *</label>
+            <label class="block text-xs text-[#4B5563] mb-1">收件人地址 *</label>
             <input type="text" id="shipRecipientAddress" required placeholder="完整縣市、行政區、街道門牌樓層" class="input-minimal" />
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-[#555555] mb-1">收貨時段 *</label>
+              <label class="block text-xs text-[#4B5563] mb-1">收貨時段 *</label>
               <select id="shipDeliveryTime" required class="input-minimal bg-white">
                 <option value="09:00-11:30">09:00-11:30（上午）</option>
                 <option value="13:30-18:00">13:30-18:00（下午）</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-[#555555] mb-1">訂單備註</label>
+              <label class="block text-xs text-[#4B5563] mb-1">訂單備註</label>
               <input type="text" id="shipOrderNote" placeholder="管理室代收、包裝需求等" class="input-minimal" />
             </div>
           </div>
+        </div>
+
+        
+        <div class="p-3.5 bg-white border border-[#BFDBFE] text-xs leading-relaxed text-[#262626] flex items-center space-x-2.5 rounded-sm shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-[#1D4ED8] shrink-0"></span>
+          <span>點擊下方「前往付款」將跳轉至安全金流頁進行付款</span>
         </div>
       </form>
 
