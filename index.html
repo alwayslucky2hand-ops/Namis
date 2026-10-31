@@ -593,11 +593,6 @@
           </div>
 
           <div>
-            <div class="text-xs text-[#6B7280]">經銷商專屬費用（1/2 批發價）</div>
-            <div id="modalDisPriceNote" class="text-xs font-semibold text-[#1E3A8A] font-mono mt-1"></div>
-          </div>
-
-          <div>
             <div class="text-xs text-[#6B7280]">架上剩餘數量</div>
             <div id="modalSelectedStock" class="text-xs font-mono text-[#111827] mt-1"></div>
           </div>
@@ -632,13 +627,13 @@
             </div>
           </div>
 
-          <button type="button" id="modalAddToCartBtn" class="w-full py-3.5 text-xs tracking-widest font-medium bg-[#1E40AF] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center space-x-2">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-              <path d="M3 6h18"/>
-              <path d="M12 10v6M9 13h6"/>
+          
+          <button type="button" id="modalAddToCartBtn" title="加入購物車" aria-label="加入購物車" class="w-full py-3.5 bg-[#1E40AF] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center shadow-sm">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1.5"/>
+              <circle cx="19" cy="21" r="1.5"/>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
             </svg>
-            <span>加入購物車（標記選購）</span>
           </button>
         </div>
       </div>
@@ -2646,11 +2641,6 @@
           : (isVip ? '當前適用結算價（VIP 85 折）' : '當前適用結算價（一般標準價）');
       }
       
-      
-      const disPriceNoteEl = document.getElementById('modalDisPriceNote');
-      if (disPriceNoteEl) {
-        disPriceNoteEl.textContent = 'NT$ ' + disPrice.toLocaleString() + (isDis ? '（您已享有經銷商 1/2 專屬批發價）' : '（僅經銷商身分適用 5 折）');
-      }
       document.getElementById('modalSelectedStock').textContent = selectedVar.remainingQty + ' 件';
       document.getElementById('modalSoldQtyText').textContent = (selectedVar.soldQty || 0) + ' 件';
       document.getElementById('modalSalePeriod').textContent = (selectedVar.saleStart || '即日起') + ' 至 ' + (selectedVar.saleEnd || '長期展售');
