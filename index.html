@@ -9,7 +9,32 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto&#43;Sans&#43;TC:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    
+    (function() {
+      try {
+        var isLogged = localStorage.getItem('YZX_ACTIVE_MEMBER_ID') || 
+                       localStorage.getItem('YZX_REMEMBER_CREDENTIALS') ||
+                       window.location.search.indexOf('lineId=') !== -1 ||
+                       window.location.search.indexOf('line_id=') !== -1;
+        if (isLogged) {
+          document.documentElement.classList.add('has-logged-in');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <style>
+     
+    html.has-logged-in #authGateView {
+      display: none !important;
+    }
+    html.has-logged-in #storefrontView {
+      display: block !important;
+    }
+    html.has-logged-in #headerMemberArea {
+      display: flex !important;
+    }
+
     :root {
       --bg-primary: #D6E7F7;        
       --bg-subtle: #EDF5FD;
@@ -2183,8 +2208,14 @@
       if (Array.isArray(memberOrders)) state.orders = memberOrders;
       if (Array.isArray(memberReturns)) state.returns = memberReturns;
 
+      
       safeSetStorage('YZX_ACTIVE_MEMBER_ID', member.memberId);
+      safeSetStorage('YZX_CACHED_MEMBER', JSON.stringify(member));
+      if (Array.isArray(shelfProducts) && shelfProducts.length > 0) {
+        safeSetStorage('YZX_CACHED_PRODUCTS', JSON.stringify(shelfProducts));
+      }
 
+      document.documentElement.classList.add('has-logged-in');
       document.getElementById('authGateView').classList.add('hidden');
       const headerArea = document.getElementById('headerMemberArea');
       headerArea.classList.remove('hidden');
@@ -3486,6 +3517,33 @@
         });
       }
 
+      
+      const quickSavedMember = safeGetStorage('YZX_CACHED_MEMBER');
+      const quickSavedProducts = safeGetStorage('YZX_CACHED_PRODUCTS');
+      const hasRemembered = safeGetStorage('YZX_ACTIVE_MEMBER_ID') || safeGetStorage('YZX_REMEMBER_CREDENTIALS');
+
+      if (hasRemembered) {
+        document.documentElement.classList.add('has-logged-in');
+        document.getElementById('authGateView').classList.add('hidden');
+        const hArea = document.getElementById('headerMemberArea');
+        if (hArea) {
+          hArea.classList.remove('hidden');
+          hArea.classList.add('flex');
+        }
+        document.getElementById('storefrontView').classList.remove('hidden');
+
+        if (quickSavedMember) {
+          try {
+            state.currentMember = JSON.parse(quickSavedMember);
+            if (quickSavedProducts) {
+              state.shelfProducts = JSON.parse(quickSavedProducts);
+            }
+            updateMemberBadges();
+            renderAllViews();
+          } catch (e) {}
+        }
+      }
+
       try {
         const res = await callBackend('getInitialBundle', {});
         if (res && res.status === 'success' && res.data) {
@@ -4252,6 +4310,8 @@
         state.currentMember = null;
         safeRemoveStorage('YZX_ACTIVE_MEMBER_ID');
         safeRemoveStorage('YZX_REMEMBER_CREDENTIALS');
+        safeRemoveStorage('YZX_CACHED_MEMBER');
+        document.documentElement.classList.remove('has-logged-in');
         document.getElementById('storefrontView').classList.add('hidden');
         document.getElementById('ordersView').classList.add('hidden');
         document.getElementById('headerMemberArea').classList.add('hidden');
