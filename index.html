@@ -865,6 +865,14 @@
     const VIP_RENEWAL_THRESHOLD = 28000; 
 
     
+    function isDistributorMember(member) {
+      if (!member) return false;
+      const id = (typeof member === 'object' ? String(member.memberId || '') : String(member || '')).trim();
+      const type = (typeof member === 'object' ? String(member.memberType || '') : '').trim();
+      return /^[A-Za-z]{2}-\d{2}-\d{4}-\d{3}$/i.test(id) || /^DIS/i.test(id) || type.includes('經銷');
+    }
+
+    
     function calculateVipValidity(member, orders) {
       if (!member || member.memberType !== 'VIP會員' || !member.vipTime) {
         return null;
@@ -1568,9 +1576,10 @@
           return { status: 'error', code: 'NOT_REGISTERED', message: '查無此會員紀錄，請確認姓名與電話或前往註冊。' };
         }
 
-        const disM = matchedList.find(m => String(m.memberId || '').toUpperCase().startsWith('DIS'));
+        const disM = matchedList.find(m => isDistributorMember(m));
         let found = null;
-        if (disM && disM.disExpireDate && new Date(disM.disExpireDate).getTime() >= Date.now()) {
+        const isDisActive = disM && (!disM.disExpireDate || new Date(disM.disExpireDate).getTime() >= Date.now());
+        if (disM && isDisActive) {
           found = disM;
         } else {
           const memM = matchedList.find(m => String(m.memberId || '').toUpperCase().startsWith('MEM'));
@@ -2081,6 +2090,7 @@
 
       const cartRows = getActiveCartRows();
       const cartTotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const isDis = isDistributorMember(m);
       const isVip = m.memberType === 'VIP會員';
       const vipThreshold = (typeof VIP_UPGRADE_THRESHOLD !== 'undefined') ? VIP_UPGRADE_THRESHOLD : 28000;
       const diffVip = Math.max(0, vipThreshold - cartTotal);
@@ -2092,29 +2102,34 @@
 
       
       let vipText = '';
-      const vipValidity = calculateVipValidity(m, state.orders);
-      if (isVip) {
-        if (vipValidity && vipValidity.isExpiringSoon && vipValidity.renewalDiff > 0) {
-          
-          vipText = LINE_ICONS.alert + ' <span class="text-[#B91C1C] font-semibold">VIP 到期提醒：將於 ' + vipValidity.vipExpireDate + ' 到期（剩 ' + vipValidity.daysRemaining + ' 天）！本期已累積消費 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，還差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + ' 即可完成自動順延續約 1 年！</span>';
-        } else if (vipValidity && vipValidity.isRenewed) {
-          
-          vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：累積已達標，已自動順延 1 年（累計續約 ' + vipValidity.totalRenewedYears + ' 年）！本期已累積 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，全館享 85 折。</span>';
-        } else if (vipValidity) {
-          
-          vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：全館享 85 折。本期累積消費 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，滿 NT$ 28,000（差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + '）自動順延續約 1 年。</span>';
+      if (!isDis) {
+        const vipValidity = calculateVipValidity(m, state.orders);
+        if (isVip) {
+          if (vipValidity && vipValidity.isExpiringSoon && vipValidity.renewalDiff > 0) {
+            
+            vipText = LINE_ICONS.alert + ' <span class="text-[#B91C1C] font-semibold">VIP 到期提醒：將於 ' + vipValidity.vipExpireDate + ' 到期（剩 ' + vipValidity.daysRemaining + ' 天）！本期已累積消費 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，還差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + ' 即可完成自動順延續約 1 年！</span>';
+          } else if (vipValidity && vipValidity.isRenewed) {
+            
+            vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：累積已達標，已自動順延 1 年（累計續約 ' + vipValidity.totalRenewedYears + ' 年）！本期已累積 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，全館享 85 折。</span>';
+          } else if (vipValidity) {
+            
+            vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員（效期至 ' + vipValidity.vipExpireDate + '）：全館享 85 折。本期累積消費 NT$ ' + vipValidity.activePeriodSpend.toLocaleString() + '，滿 NT$ 28,000（差 NT$ ' + vipValidity.renewalDiff.toLocaleString() + '）自動順延續約 1 年。</span>';
+          } else {
+            vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員：全館商品已自動享有專屬 85 折優惠價。</span>';
+          }
+        } else if (diffVip === 0 && cartTotal > 0) {
+          vipText = LINE_ICONS.check + ' <span>結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！已達升等門檻。</span>';
         } else {
-          vipText = LINE_ICONS.crown + ' <span>尊榮 VIP 會員：全館商品已自動享有專屬 85 折優惠價。</span>';
+          vipText = LINE_ICONS.crown + ' <span>結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！差 NT$ ' + diffVip.toLocaleString() + ' 即可升等。</span>';
         }
-      } else if (diffVip === 0 && cartTotal > 0) {
-        vipText = LINE_ICONS.check + ' <span>結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！已達升等門檻。</span>';
-      } else {
-        vipText = LINE_ICONS.crown + ' <span>結帳滿 NT$ 28,000 立即升等 VIP（下次起享 85 折）！差 NT$ ' + diffVip.toLocaleString() + ' 即可升等。</span>';
       }
 
       
       let shippingText = '';
-      if (cartTotal <= 0) {
+      const isStorePickup = state.currentDeliveryMode === 'store';
+      if (isStorePickup) {
+        shippingText = LINE_ICONS.truck + ' <span>門市到店取貨：專屬免收運費禮遇（現省 NT$ 150）。</span>';
+      } else if (cartTotal <= 0) {
         shippingText = LINE_ICONS.truck + ' <span>全館消費滿 NT$ 5,000 即享免運費（未達門檻加收 NT$ 150 運費）。</span>';
       } else if (isBirthdayMonth) {
         shippingText = LINE_ICONS.gift + ' <span>歡慶本月壽星：全單享專屬免運費禮遇（現省 NT$ 150）。</span>';
@@ -2139,9 +2154,7 @@
           '<div class="flex items-center space-x-1.5 font-medium ' + (cartTotal >= 5000 || isBirthdayMonth ? 'text-[#15803D]' : 'text-[#1D4ED8]') + '">' +
             shippingText +
           '</div>' +
-          '<div class="flex items-center space-x-1.5 text-[#262626]">' +
-            vipText +
-          '</div>' +
+          (vipText ? '<div class="flex items-center space-x-1.5 text-[#262626]">' + vipText + '</div>' : '') +
           (bdayGiftText ? '<div class="flex items-center space-x-1.5 text-[#15803D] font-medium">' + bdayGiftText + '</div>' : '') +
         '</div>';
 
@@ -2190,7 +2203,7 @@
 
       const tierBadge = document.getElementById('profileMemberTier');
       if (tierBadge) {
-        const isDis = String(m.memberId || '').toUpperCase().startsWith('DIS');
+        const isDis = isDistributorMember(m);
         
         const badgeLabel = isDis 
           ? ('經銷商（' + m.memberId + '）') 
@@ -2286,7 +2299,7 @@
     function getMemberProductPrice(product, member) {
       const regPrice = Number(product.price || 0);
       if (!member) return regPrice;
-      const isDis = String(member.memberId || '').toUpperCase().startsWith('DIS') || member.memberType === '經銷商';
+      const isDis = isDistributorMember(member);
       if (isDis) return Math.round(regPrice * 0.5); 
       const isVip = member.memberType === 'VIP會員';
       if (isVip) return Number(product.vipPrice || Math.round(regPrice * 0.85));
@@ -2295,7 +2308,7 @@
 
     function getGroupedShelfZones() {
       const m = state.currentMember;
-      const isDis = m && (String(m.memberId || '').toUpperCase().startsWith('DIS') || m.memberType === '經銷商');
+      const isDis = m && isDistributorMember(m);
 
       const activeRows = state.shelfProducts.filter(function(p) {
         if (p.status && p.status !== '上架中') return false;
@@ -2394,7 +2407,7 @@
       }
 
       const m = state.currentMember;
-      const isDisMember = m && (String(m.memberId || '').toUpperCase().startsWith('DIS') || m.memberType === '經銷商');
+      const isDisMember = m && isDistributorMember(m);
       const isVipMember = m && m.memberType === 'VIP會員';
 
       filtered.forEach(function(zone) {
@@ -2601,8 +2614,7 @@
       document.getElementById('modalProductDesc').textContent = selectedVar.description || '（尚無詳細說明）';
       document.getElementById('modalAccessBadge').textContent = selectedVar.memberLimit || '公開展售';
 
-      const isDis = state.currentMember && (String(state.currentMember.memberId || '').toUpperCase().startsWith('DIS') || state.currentMember.memberType === '經銷商');
-      
+      const isDis = state.currentMember && isDistributorMember(state.currentMember);
 
       
       const regPrice = Number(selectedVar.price || 0);                          
@@ -2720,13 +2732,14 @@
       
       const currentMonth = new Date().getMonth() + 1;
       const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
-      const shippingFee = calculateShippingFee(subtotal, isBirthdayMonth);
+      const isStorePickup = state.currentDeliveryMode === 'store';
+      const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth);
       const finalTotal = subtotal > 0 ? (subtotal + shippingFee) : 0;
 
       document.getElementById('headerCartCount').textContent = String(totalQty);
       document.getElementById('drawerCartCountBadge').textContent = totalQty + ' 件';
       document.getElementById('cartSummaryTotalQty').textContent = totalQty + ' 件';
-      const isDisMember = state.currentMember && (String(state.currentMember.memberId || '').toUpperCase().startsWith('DIS') || state.currentMember.memberType === '經銷商');
+      const isDisMember = state.currentMember && isDistributorMember(state.currentMember);
       document.getElementById('cartSummaryMemberTier').textContent =
         isDisMember
           ? '經銷商 5折 專屬批發價'
@@ -2742,6 +2755,9 @@
         if (subtotal <= 0) {
           shippingEl.textContent = 'NT$ 0';
           shippingEl.className = 'font-mono text-[#111111]';
+        } else if (isStorePickup) {
+          shippingEl.textContent = 'NT$ 0 (到店取貨免運)';
+          shippingEl.className = 'font-mono text-[#15803D] font-medium';
         } else if (shippingFee === 0) {
           shippingEl.textContent = isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)';
           shippingEl.className = 'font-mono text-[#15803D] font-medium';
@@ -3480,7 +3496,8 @@
 
           
           function isDisMemberActive(m) {
-            if (!m || !String(m.memberId || '').toUpperCase().startsWith('DIS') || !m.disExpireDate) return false;
+            if (!m || !isDistributorMember(m)) return false;
+            if (!m.disExpireDate) return true; 
             const raw = String(m.disExpireDate).trim();
             const mm = raw.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
             let d;
@@ -3924,94 +3941,95 @@
         });
 
         
-        state.cached711Stores = [];
+        
+        
+        state.all711Stores = [];
+        let isComposing711 = false; 
 
-        async function preload711Stores() {
-          if (state.cached711Stores && state.cached711Stores.length > 0) return state.cached711Stores;
-
-          
-          const localData = safeGetStorage('YZX_711_CATALOG_V2');
-          if (localData) {
+        
+        async function init711LocalStores() {
+          const cached = safeGetStorage('YZX_711_CATALOG_LOCAL_V1');
+          if (cached) {
             try {
-              const parsed = JSON.parse(localData);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                state.cached711Stores = parsed;
-                return parsed;
-              }
+              state.all711Stores = JSON.parse(cached);
+              return;
             } catch (e) {}
           }
 
-          
           try {
             const res = await callBackend('getAll711Stores', {});
-            if (res.status === 'success' && res.data && Array.isArray(res.data.stores)) {
-              const indexedList = res.data.stores.map(function(item) {
-                const c = item[0] || '';
-                const d = item[1] || '';
-                const a = item[2] || '';
-                const n = item[3] || '';
-                return {
-                  c: c, d: d, a: a, n: n,
-                  s: (c + d + a + n).toLowerCase().replace(/臺/g, '台') 
-                };
-              });
-              state.cached711Stores = indexedList;
-              safeSetStorage('YZX_711_CATALOG_V2', JSON.stringify(indexedList));
-              return indexedList;
+            if (res && res.status === 'success' && res.data && Array.isArray(res.data.stores)) {
+              state.all711Stores = res.data.stores; 
+              safeSetStorage('YZX_711_CATALOG_LOCAL_V1', JSON.stringify(res.data.stores));
             }
-          } catch (err) {}
-          return [];
+          } catch (err) {
+            console.warn('載入 7-11 門市清單失敗:', err);
+          }
         }
 
         
-        function executeInstant711Filter(query) {
+        function filter711StoresLocally(rawQuery) {
           if (!addrDropdown) return;
-          const stores = state.cached711Stores || [];
-          if (stores.length === 0) return;
+          const query = String(rawQuery || '').trim();
+
+          
+          if (query.includes('（') || query.includes('(') || query.length === 0 || /[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/.test(query)) {
+            addrDropdown.classList.add('hidden');
+            return;
+          }
+
+          
+          if (!state.all711Stores || state.all711Stores.length === 0) {
+            addrDropdown.innerHTML = '<div class="p-3 text-xs text-[#1D4ED8] text-center flex items-center justify-center space-x-1.5"><span class="w-1.5 h-1.5 bg-[#1D4ED8] rounded-full animate-ping"></span><span>正在準備全台 7-11 門市資料，請稍候...</span></div>';
+            addrDropdown.classList.remove('hidden');
+            init711LocalStores().then(() => filter711StoresLocally(query));
+            return;
+          }
 
           const normQuery = query.toLowerCase().replace(/臺/g, '台');
           const tokens = normQuery.split(/\s+/).filter(Boolean);
-          const matched = [];
 
-          for (let i = 0; i < stores.length; i++) {
-            const item = stores[i];
-            let isMatch = true;
-            for (let k = 0; k < tokens.length; k++) {
-              if (item.s.indexOf(tokens[k]) === -1) {
-                isMatch = false;
-                break;
-              }
-            }
-            if (isMatch) {
-              matched.push(item);
-              if (matched.length >= 25) break; 
+          const matchedList = [];
+          for (let i = 0; i < state.all711Stores.length; i++) {
+            const item = state.all711Stores[i];
+            const city = item[0] || '';
+            const district = item[1] || '';
+            const address = item[2] || '';
+            const storeName = item[3] || '';
+            const fullText = (city + district + address + storeName).toLowerCase().replace(/臺/g, '台');
+
+            const isMatched = tokens.every(function(t) { return fullText.indexOf(t) !== -1; });
+            if (isMatched) {
+              matchedList.push({ city: city, district: district, address: address, storeName: storeName });
+              if (matchedList.length >= 30) break; 
             }
           }
 
-          if (matched.length === 0) {
-            addrDropdown.innerHTML = '<div class="p-3 text-xs text-[#6B7280] text-center">查無符合「' + query + '」的 7-11 門市，請嘗試更換路名或區域</div>';
+          if (matchedList.length === 0) {
+            addrDropdown.innerHTML = '<div class="p-3 text-xs text-[#6B7280] text-center">查無符合「' + query + '」的門市，請嘗試輸入路名、門市名或行政區（如：板橋、三民、七賢）</div>';
           } else {
-            addrDropdown.innerHTML = matched.map(function(st, idx) {
-              return '<div data-instant-pick-idx="' + idx + '" class="p-2.5 hover:bg-[#EFF6FF] cursor-pointer transition-colors text-left">' +
+            addrDropdown.innerHTML = matchedList.map(function(st, idx) {
+              return '<div data-store-pick-idx="' + idx + '" class="p-2.5 hover:bg-[#EFF6FF] cursor-pointer transition-colors text-left">' +
                 '<div class="flex items-center justify-between">' +
-                  '<span class="text-xs font-semibold text-[#1D4ED8]">' + st.n + '</span>' +
-                  '<span class="text-[10px] px-1.5 py-0.5 bg-[#EDF2F7] text-[#4A5568] rounded-sm">' + st.c + st.d + '</span>' +
+                  '<span class="text-xs font-semibold text-[#1D4ED8]">' + st.storeName + '</span>' +
+                  '<span class="text-[10px] px-1.5 py-0.5 bg-[#EDF2F7] text-[#4A5568] rounded-sm">' + st.city + st.district + '</span>' +
                 '</div>' +
-                '<div class="text-[11px] text-[#4B5563] mt-0.5">' + st.a + '</div>' +
+                '<div class="text-[11px] text-[#4B5563] mt-0.5">' + st.address + '</div>' +
               '</div>';
             }).join('');
 
             
-            addrDropdown.querySelectorAll('[data-instant-pick-idx]').forEach(function(itemEl) {
+            addrDropdown.querySelectorAll('[data-store-pick-idx]').forEach(function(itemEl) {
               itemEl.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                const chosen = matched[Number(itemEl.getAttribute('data-instant-pick-idx'))];
-                addrInput.value = chosen.n + '（' + chosen.a + '）';
+                const chosen = matchedList[Number(itemEl.getAttribute('data-store-pick-idx'))];
+                addrInput.value = chosen.storeName + '（' + chosen.address + '）';
                 addrDropdown.classList.add('hidden');
-                showToast('✓ 已帶入門市：' + chosen.n, 'success');
+                showToast('✓ 已選擇門市：' + chosen.storeName, 'success');
               });
             });
           }
+
           addrDropdown.classList.remove('hidden');
         }
 
@@ -4026,11 +4044,11 @@
           if (payOnSiteCb) payOnSiteCb.checked = false;
 
           addrInput.readOnly = false;
-          addrInput.placeholder = '請直接輸入縣市區域或門市名稱（例如：台中市北屯區、崇德）過篩門市...';
+          addrInput.placeholder = '請輸入縣市、區域、路名或門市名稱（例如：板橋、逢甲、七賢）...';
           addrInput.value = '';
 
           
-          preload711Stores();
+          init711LocalStores();
 
           setTimeout(function() { addrInput.focus(); }, 100);
           updateCheckoutBtnState();
@@ -4053,34 +4071,33 @@
         });
 
         
+        addrInput.addEventListener('compositionstart', function() {
+          isComposing711 = true;
+        });
+
+        
+        addrInput.addEventListener('compositionend', function(e) {
+          isComposing711 = false;
+          if (state.currentDeliveryMode === '711') {
+            filter711StoresLocally(e.target.value);
+          }
+        });
+
+        
         addrInput.addEventListener('input', function(e) {
           if (state.currentDeliveryMode !== '711') {
             if (addrDropdown) addrDropdown.classList.add('hidden');
             return;
           }
+          if (isComposing711 || e.isComposing) return; 
 
-          const query = e.target.value.trim();
-
-          
-          if (query.includes('（') || query.includes('(') || query.length < 2) {
-            if (addrDropdown) addrDropdown.classList.add('hidden');
-            return;
-          }
-
-          
-          if (state.cached711Stores && state.cached711Stores.length > 0) {
-            executeInstant711Filter(query);
-          } else {
-            preload711Stores().then(function() {
-              executeInstant711Filter(query);
-            });
-          }
+          filter711StoresLocally(e.target.value);
         });
 
         
-        document.addEventListener('click', function(e) {
-          if (addrDropdown && !addrDropdown.contains(e.target) && e.target !== addrInput) {
-            addrDropdown.classList.add('hidden');
+        addrInput.addEventListener('focus', function(e) {
+          if (state.currentDeliveryMode === '711' && e.target.value.trim().length > 0) {
+            filter711StoresLocally(e.target.value);
           }
         });
 
@@ -4175,7 +4192,7 @@
             } else {
               document.getElementById('cartDrawerBackdrop').classList.add('hidden');
               switchMainView('orders');
-              if (resData.willUpgradeOnPayment) {
+              if (resData.willUpgradeOnPayment && !isDistributorMember(state.currentMember)) {
                 showToast(`訂單 ${resData.orderNo} 建立成功！單筆滿 NT$ 28,000，將於確認收款完成後自動晉升為 VIP 會員（下次起享 85 折優惠）！`, 'success');
               } else {
                 showToast(`訂單成立！訂單編號：${resData.orderNo}`, 'success');
