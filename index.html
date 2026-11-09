@@ -1353,7 +1353,8 @@
       returns: [],
       activeShelfGroup: null,
       selectedVariantRowId: null,
-      modalQuantity: 1
+      modalQuantity: 1,
+      currentDeliveryMode: 'home' 
     };
 
     
@@ -2925,8 +2926,9 @@
       const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
       const currentMonth = new Date().getMonth() + 1;
       const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
-      const shippingFee = calculateShippingFee(subtotal, isBirthdayMonth);
-      const finalTotal = subtotal + shippingFee;
+      const isStorePickup = state.currentDeliveryMode === 'store';
+      const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth);
+      const finalTotal = subtotal > 0 ? (subtotal + shippingFee) : 0;
 
       
       if (isBirthdayMonth) {
@@ -2977,7 +2979,7 @@
         '</div>' +
         '<div class="flex justify-between text-[#666666]">' +
           '<span>配送運費</span><span class="font-mono ' + (shippingFee === 0 ? 'text-[#15803D] font-medium' : 'text-[#B91C1C] font-medium') + '">' +
-            (shippingFee === 0 ? (isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)') : '+ NT$ 150') +
+            (subtotal <= 0 ? 'NT$ 0' : (isStorePickup ? 'NT$ 0 (到店取貨免運)' : (shippingFee === 0 ? (isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)') : '+ NT$ 150'))) +
           '</span>' +
         '</div>' +
         '<div class="flex justify-between font-medium text-[#111111] pt-1.5 hairline-t">' +
@@ -3990,6 +3992,14 @@
         }
       }
 
+      
+      function refreshDeliveryAndShippingUi() {
+        updateCheckoutBtnState();
+        renderCartDrawer();
+        renderMemberCenterCart();
+        renderVipAndBirthdayBanners();
+      }
+
       if (btnHome && btn711 && btnStore && addrInput) {
         
         btnHome.addEventListener('click', function() {
@@ -4004,8 +4014,7 @@
           addrInput.readOnly = false;
           addrInput.placeholder = '完整縣市、行政區、街道門牌樓層';
           fillDefaultRecipientInfo();
-          updateCheckoutBtnState();
-          renderCartDrawer();
+          refreshDeliveryAndShippingUi();
         });
 
         
@@ -4119,12 +4128,16 @@
           init711LocalStores();
 
           setTimeout(function() { addrInput.focus(); }, 100);
-          updateCheckoutBtnState();
-          renderCartDrawer();
+          refreshDeliveryAndShippingUi();
         });
 
         
         btnStore.addEventListener('click', function() {
+          if (state.currentDeliveryMode === 'store') {
+            btnHome.click(); 
+            return;
+          }
+
           state.currentDeliveryMode = 'store';
           btnStore.className = 'px-2 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
           btnHome.className = 'px-2 py-0.5 border border-[#D1D5DB] bg-white text-[#262626] hover:border-[#262626] transition-colors';
@@ -4134,8 +4147,7 @@
 
           addrInput.value = '408 臺中市南屯區文心南二路420號';
           addrInput.readOnly = true;
-          updateCheckoutBtnState();
-          renderCartDrawer();
+          refreshDeliveryAndShippingUi();
         });
 
         
@@ -4235,6 +4247,7 @@
               atmLast5: '',
               payMethod: isPayOnSite ? '門市現場付款' : '',
               isPayOnSite: isPayOnSite,
+              isStorePickup: isStorePickup,
               totalAmount: totalAmount
             })
           );
