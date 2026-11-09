@@ -25,14 +25,23 @@
   </script>
   <style>
      
+    html:not(.has-logged-in) #storefrontView,
+    html:not(.has-logged-in) #ordersView,
+    html:not(.has-logged-in) #headerMemberArea {
+      display: none !important;
+    }
     html.has-logged-in #authGateView {
       display: none !important;
     }
-    html.has-logged-in #storefrontView {
-      display: block !important;
-    }
     html.has-logged-in #headerMemberArea {
       display: flex !important;
+    }
+
+     
+    #storefrontView.hidden,
+    #ordersView.hidden,
+    #authGateView.hidden {
+      display: none !important;
     }
 
     :root {
@@ -298,7 +307,7 @@
   
   
   
-  <main id="storefrontView" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8">
+  <main id="storefrontView" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8">
     
     <div id="storeMemberBanner" class="mb-6 p-4 hairline-border bg-[#FAFAFA] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div id="storeVipProgressNotice" class="text-xs msg-black leading-relaxed"></div>
@@ -2321,6 +2330,7 @@
         renderMemberCenterCart();
         renderOrdersView();
       }
+      window.scrollTo(0, 0); 
     }
 
     
