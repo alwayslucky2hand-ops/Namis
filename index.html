@@ -491,6 +491,44 @@
           前往結帳
         </button>
       </div>
+
+      
+      <div id="hqTransferBox" class="hidden p-4 border border-[#BFDBFE] bg-[#F8FAFC] space-y-3">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-2 text-[#1E3A8A] font-medium">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M16 3l4 4-4 4"/>
+              <path d="M20 7H4"/>
+              <path d="M8 21l-4-4 4-4"/>
+              <path d="M4 17h16"/>
+            </svg>
+            <span>總部轉單</span>
+          </div>
+          <span id="hqSubordinateCountText" class="text-[11px] text-[#6B7280] font-mono">0</span>
+        </div>
+
+        <div class="flex items-center gap-2 relative">
+          <div class="relative flex-1">
+            <input type="text" id="hqTransferSearchInput" placeholder="輸入會員編號或姓名過篩..." class="input-minimal text-xs" autocomplete="off" />
+            <input type="hidden" id="hqSelectedTargetMemberId" />
+            <div id="hqTransferDropdownList" class="hidden absolute left-0 right-0 top-full mt-1 z-30 max-h-48 overflow-y-auto custom-scrollbar border border-[#BFDBFE] bg-white divide-y divide-[#F1F5F9] shadow-lg"></div>
+          </div>
+          
+          <button type="button" id="hqExecuteTransferBtn" title="確認轉單" aria-label="確認轉單" class="w-10 h-10 border border-[#262626] flex items-center justify-center bg-white text-[#262626] hover:bg-[#353535] hover:text-white transition-colors shrink-0">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M5 12h14"/>
+              <path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+          
+          <button type="button" id="hqResetTransferBtn" title="清除選取" aria-label="清除選取" class="w-10 h-10 border border-[#D1D5DB] flex items-center justify-center bg-white text-[#666666] hover:border-[#262626] hover:text-[#262626] transition-colors shrink-0">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <div id="memberActiveCartContainer" class="space-y-3"></div>
     </div>
 
@@ -897,6 +935,26 @@
     const LIFF_ID = ''; 
     const VIP_UPGRADE_THRESHOLD = 28000; 
     const VIP_RENEWAL_THRESHOLD = 28000; 
+
+    
+    function isHqMember(member) {
+      if (!member) return false;
+      const id = (typeof member === 'object' ? String(member.memberId || '') : String(member || '')).trim();
+      return /^TW-NAMIS-/i.test(id);
+    }
+
+    
+    function getSubordinateMembers() {
+      if (!state.currentMember || !isHqMember(state.currentMember)) return [];
+      const hqId = String(state.currentMember.memberId || '').trim().toUpperCase();
+      return state.members.filter(function(m) {
+        if (!m || m.memberId === state.currentMember.memberId) return false;
+        const ref = String(m.lineId || '').trim().toUpperCase();
+        const isSub = (ref === hqId);
+        const isEligible = (m.memberType === '一般會員' || m.memberType === 'VIP會員' || isDistributorMember(m));
+        return isSub && isEligible;
+      });
+    }
 
     
     function isDistributorMember(member) {
@@ -1876,6 +1934,43 @@
           data: {
             orders: db.orders.filter(o => o.memberId === payload.memberId),
             returns: db.returns.filter(r => r.memberId === payload.memberId)
+          }
+        };
+      }
+
+      if (action === 'transferCartOrder') {
+        const fromM = db.members.find(m => m.memberId === payload.fromMemberId);
+        const toM = db.members.find(m => m.memberId === payload.toMemberId);
+        if (!fromM || !toM) return { status: 'error', message: '查無來源或目標會員資料' };
+
+        const cartItems = db.orders.filter(o => o.memberId === fromM.memberId && (o.orderStatus === '選購' || o.orderStatus === '購物車'));
+        if (cartItems.length === 0) return { status: 'error', message: '購物車內無待轉單之商品' };
+
+        cartItems.forEach(row => {
+          const regPrice = Number(row.price || 0);
+          const vipPrice = Number(row.vipPrice || Math.round(regPrice * 0.85));
+          const unitPrice = toM.memberType === 'VIP會員' ? vipPrice : regPrice;
+          const newSubtotal = unitPrice * Number(row.buyQty || 1);
+
+          row.memberId = toM.memberId;
+          row.memberName = toM.name;
+          row.memberType = toM.memberType;
+          row.memberPhone = toM.phone;
+          row.memberLineId = toM.lineId || '';
+          row.memberEmail = toM.email || '';
+          row.subtotal = newSubtotal;
+          row.shopTime = ts.formatted;
+          const transferLog = '[' + ts.formatted.replace(/-/g, ' ') + ' 總部轉單] 由總部員工 ' + fromM.memberId + '（' + fromM.name + '）轉單至會員 ' + toM.memberId + '（' + toM.name + '）';
+          row.updateLog = row.updateLog ? (row.updateLog + '\n' + transferLog) : transferLog;
+        });
+
+        saveLocalMirrorDb(db);
+        return {
+          status: 'success',
+          data: {
+            fromMemberId: fromM.memberId,
+            toMemberId: toM.memberId,
+            orders: db.orders
           }
         };
       }
@@ -2954,6 +3049,19 @@
         container.appendChild(bdayCard);
       }
 
+      
+      const hqBox = document.getElementById('hqTransferBox');
+      if (hqBox) {
+        if (isHqMember(state.currentMember)) {
+          hqBox.classList.remove('hidden');
+          const subs = getSubordinateMembers();
+          const countEl = document.getElementById('hqSubordinateCountText');
+          if (countEl) countEl.textContent = '可轉單會員：' + subs.length + ' 位';
+        } else {
+          hqBox.classList.add('hidden');
+        }
+      }
+
       cartRows.forEach(function(item) {
         const imgs = parseProductImages(item.images, item.productName);
         const fallbackImg = makeMinimalistFallbackSvg(item.productName);
@@ -3757,6 +3865,172 @@
           showToast('重新整理失敗: ' + err.message, 'error');
         }
       });
+
+      
+      const hqInput = document.getElementById('hqTransferSearchInput');
+      const hqHiddenId = document.getElementById('hqSelectedTargetMemberId');
+      const hqDropdown = document.getElementById('hqTransferDropdownList');
+      const hqExecuteBtn = document.getElementById('hqExecuteTransferBtn');
+      const hqResetBtn = document.getElementById('hqResetTransferBtn');
+
+      function filterHqSubordinates(query) {
+        if (!hqDropdown) return;
+        const q = String(query || '').trim().toLowerCase();
+        const subs = getSubordinateMembers();
+
+        if (subs.length === 0) {
+          hqDropdown.innerHTML = '<div class="p-3 text-xs text-[#6B7280] text-center">查無推薦人為您的會員紀錄</div>';
+          hqDropdown.classList.remove('hidden');
+          return;
+        }
+
+        const filtered = subs.filter(function(m) {
+          if (!q) return true;
+          const matchText = (m.memberId + ' ' + m.name + ' ' + (m.phone || '')).toLowerCase();
+          return matchText.includes(q);
+        });
+
+        if (filtered.length === 0) {
+          hqDropdown.innerHTML = '<div class="p-3 text-xs text-[#6B7280] text-center">查無符合的下線會員</div>';
+        } else {
+          hqDropdown.innerHTML = filtered.map(function(m, idx) {
+            return '<div data-hq-pick-id="' + m.memberId + '" data-hq-pick-name="' + m.name + '" class="p-2.5 hover:bg-[#EFF6FF] cursor-pointer transition-colors text-left flex items-center justify-between">' +
+              '<div>' +
+                '<span class="text-xs font-mono font-medium text-[#1D4ED8]">' + m.memberId + '_' + m.name + '</span>' +
+                '<div class="text-[11px] text-[#6B7280] mt-0.5">' + (m.phone || '-') + '</div>' +
+              '</div>' +
+              '<span class="text-[10px] px-1.5 py-0.5 hairline-border bg-white text-[#262626]">' + m.memberType + '</span>' +
+            '</div>';
+          }).join('');
+
+          hqDropdown.querySelectorAll('[data-hq-pick-id]').forEach(function(itemEl) {
+            itemEl.addEventListener('click', function(ev) {
+              ev.stopPropagation();
+              const targetId = itemEl.getAttribute('data-hq-pick-id');
+              const targetName = itemEl.getAttribute('data-hq-pick-name');
+              hqInput.value = targetId + '_' + targetName;
+              hqHiddenId.value = targetId;
+              hqDropdown.classList.add('hidden');
+              showToast('已選擇會員：' + targetId + '_' + targetName, 'success');
+            });
+          });
+        }
+
+        hqDropdown.classList.remove('hidden');
+      }
+
+      if (hqInput) {
+        hqInput.addEventListener('focus', function() {
+          filterHqSubordinates(hqInput.value);
+        });
+        hqInput.addEventListener('input', function(e) {
+          hqHiddenId.value = '';
+          filterHqSubordinates(e.target.value);
+        });
+        document.addEventListener('click', function(e) {
+          if (hqDropdown && !hqDropdown.contains(e.target) && e.target !== hqInput) {
+            hqDropdown.classList.add('hidden');
+          }
+        });
+      }
+
+      if (hqResetBtn) {
+        hqResetBtn.addEventListener('click', function() {
+          if (hqInput) hqInput.value = '';
+          if (hqHiddenId) hqHiddenId.value = '';
+          if (hqDropdown) hqDropdown.classList.add('hidden');
+        });
+      }
+
+      if (hqExecuteBtn) {
+        hqExecuteBtn.addEventListener('click', async function() {
+          if (!state.currentMember || !isHqMember(state.currentMember)) {
+            showToast('僅總部會員具備轉單功能', 'error');
+            return;
+          }
+
+          const targetMemberId = hqHiddenId ? hqHiddenId.value.trim() : '';
+          if (!targetMemberId) {
+            showToast('請於輸入框搜尋並點選目標會員（編號_姓名）', 'error');
+            return;
+          }
+
+          const cartRows = getActiveCartRows();
+          if (cartRows.length === 0) {
+            showToast('目前購物車內無待轉單之商品', 'error');
+            return;
+          }
+
+          const targetMember = state.members.find(function(m) { return m.memberId === targetMemberId; });
+          if (!targetMember) {
+            showToast('查無該目標會員資料', 'error');
+            return;
+          }
+
+          const confirmText = '確認將當前購物車共 ' + cartRows.length + ' 項商品轉單給 ' + targetMember.memberId + '_' + targetMember.name + ' 嗎？\n轉單完成後您的購物車將立即清空。';
+          if (!confirm(confirmText)) return;
+
+          
+          const rollbackOrdersSnapshot = JSON.parse(JSON.stringify(state.orders));
+          const hqId = state.currentMember.memberId;
+
+          cartRows.forEach(function(row) {
+            const regPrice = Number(row.price || 0);
+            const vipPrice = Number(row.vipPrice || Math.round(regPrice * 0.85));
+            let unitPrice = regPrice;
+            if (isDistributorMember(targetMember)) {
+              unitPrice = Math.round(regPrice * 0.5);
+            } else if (targetMember.memberType === 'VIP會員') {
+              unitPrice = vipPrice;
+            }
+            row.memberId = targetMember.memberId;
+            row.memberName = targetMember.name;
+            row.memberType = targetMember.memberType;
+            row.memberPhone = targetMember.phone;
+            row.memberLineId = targetMember.lineId;
+            row.memberEmail = targetMember.email;
+            row.subtotal = unitPrice * Number(row.buyQty || 1);
+          });
+
+          
+          renderCartDrawer();
+          renderMemberCenterCart();
+          renderOrdersBadgeCount();
+          if (hqInput) hqInput.value = '';
+          if (hqHiddenId) hqHiddenId.value = '';
+          showToast('已轉單至 ' + targetMember.memberId + '_' + targetMember.name, 'success');
+
+          
+          try {
+            const res = await runWithButtonProgress(hqExecuteBtn, null, '轉單', function() {
+              return callBackend('transferCartOrder', {
+                fromMemberId: hqId,
+                toMemberId: targetMember.memberId
+              });
+            });
+
+            if (res.status === 'success' && res.data && res.data.orders) {
+              state.orders = res.data.orders;
+              renderCartDrawer();
+              renderMemberCenterCart();
+              renderOrdersBadgeCount();
+              showToast('試算表已完成轉單與更新日誌寫入', 'success');
+            } else {
+              state.orders = rollbackOrdersSnapshot;
+              renderCartDrawer();
+              renderMemberCenterCart();
+              renderOrdersBadgeCount();
+              showToast(res.message || '轉單失敗，已還原狀態', 'error');
+            }
+          } catch (err) {
+            state.orders = rollbackOrdersSnapshot;
+            renderCartDrawer();
+            renderMemberCenterCart();
+            renderOrdersBadgeCount();
+            showToast('連線中斷，已為您還原購物車', 'error');
+          }
+        });
+      }
 
       document.getElementById('memberRecipientForm').addEventListener('submit', async function(e) {
         e.preventDefault();
