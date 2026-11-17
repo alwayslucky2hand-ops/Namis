@@ -1068,15 +1068,15 @@
 
     
     const GOOGLE_ITU_COUNTRIES = [
-      { code: '+886', name: '台灣 (+886)' },
-      { code: '+852', name: '香港 (+852)' },
-      { code: '+853', name: '澳門 (+853)' },
-      { code: '+81', name: '日本 (+81)' },
-      { code: '+82', name: '南韓 (+82)' },
-      { code: '+65', name: '新加坡 (+65)' },
-      { code: '+60', name: '馬來西亞 (+60)' },
-      { code: '+86', name: '中國大陸 (+86)' },
-      { code: '+1', name: '美國／加拿大 (+1)' },
+      { code: '+886', iso: 'TW', name: '台灣 (+886)' },
+      { code: '+852', iso: 'HK', name: '香港 (+852)' },
+      { code: '+853', iso: 'MO', name: '澳門 (+853)' },
+      { code: '+81', iso: 'JP', name: '日本 (+81)' },
+      { code: '+82', iso: 'KR', name: '南韓 (+82)' },
+      { code: '+65', iso: 'SG', name: '新加坡 (+65)' },
+      { code: '+60', iso: 'MY', name: '馬來西亞 (+60)' },
+      { code: '+86', iso: 'CN', name: '中國大陸 (+86)' },
+      { code: '+1', iso: 'US', name: '美國／加拿大 (+1)' },
       { code: '+44', name: '英國 (+44)' },
       { code: '+61', name: '澳洲 (+61)' },
       { code: '+64', name: '紐西蘭 (+64)' },
@@ -1406,6 +1406,8 @@
       selectedCategory: 'ALL',
       searchKeyword: '',
       shelfProducts: [],
+      priceTable: [],
+      exchangeRates: { TWD: 1, CNY: 0.225, SGD: 0.0415, MYR: 0.138, USD: 0.031 },
       members: [],
       orders: [],
       returns: [],
@@ -2206,9 +2208,57 @@
       alert: '<svg class="w-3.5 h-3.5 inline-block shrink-0 -mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
     };
 
+    const OVERSEAS_RULES = {
+      CN: { currency: 'CNY', symbol: 'RMB ', minSpend: 7500, label: '中國' },
+      SG: { currency: 'SGD', symbol: 'SGD ', minSpend: 1300, label: '新加坡' },
+      MY: { currency: 'MYR', symbol: 'MYR ', minSpend: 5000, label: '馬來西亞' },
+      US: { currency: 'USD', symbol: 'USD ', minSpend: 1000, label: '美國' }
+    };
+
+    function getIsoFromPhone(phoneStr) {
+      const s = String(phoneStr || '');
+      for (let i = 0; i < GOOGLE_ITU_COUNTRIES.length; i++) {
+        const c = GOOGLE_ITU_COUNTRIES[i];
+        if (c.iso && s.indexOf(c.code) !== -1) return c.iso;
+      }
+      return 'TW';
+    }
+
+    function getMemberCountryIso(member) {
+      const m = member || state.currentMember;
+      if (!m) return 'TW';
+      const id = String(m.memberId || '').trim().toUpperCase();
+      const match = id.match(/^([A-Z]{2})-/);
+      if (match && match[1]) return match[1];
+      return getIsoFromPhone(m.phone || '');
+    }
+
+    function getCurrencySymbol(countryIso) {
+      const iso = countryIso || getMemberCountryIso();
+      if (iso === 'TW') return 'NT$ ';
+      if (OVERSEAS_RULES[iso]) return OVERSEAS_RULES[iso].symbol;
+      return 'USD ';
+    }
+
+    function formatMoney(amount, countryIso) {
+      return getCurrencySymbol(countryIso) + Number(amount || 0).toLocaleString();
+    }
+
+    function getOverseasShippingFeeLocal(countryIso) {
+      const iso = countryIso || getMemberCountryIso();
+      const rule = OVERSEAS_RULES[iso];
+      if (!rule) return 0;
+      const rate = (state.exchangeRates && state.exchangeRates[rule.currency]) ? Number(state.exchangeRates[rule.currency]) : 0;
+      return Math.round(800 * rate);
+    }
+
     
-    function calculateShippingFee(subtotal, isBirthdayMonth) {
+    function calculateShippingFee(subtotal, isBirthdayMonth, countryIso) {
+      const iso = countryIso || getMemberCountryIso();
       if (subtotal <= 0) return 0;
+      if (iso !== 'TW') {
+        return getOverseasShippingFeeLocal(iso);
+      }
       if (isBirthdayMonth) return 0;
       return subtotal >= 5000 ? 0 : 150;
     }
@@ -2254,10 +2304,24 @@
         }
       }
 
+      const countryIso = getMemberCountryIso(m);
+      const overseasRule = OVERSEAS_RULES[countryIso];
+      const isOverseas = (countryIso !== 'TW');
+
       
       let shippingText = '';
       const isStorePickup = state.currentDeliveryMode === 'store';
-      if (isStorePickup) {
+
+      if (isOverseas && overseasRule) {
+        const overseasFeeLocal = getOverseasShippingFeeLocal(countryIso);
+        const feeText = formatMoney(overseasFeeLocal, countryIso);
+        if (cartTotal >= overseasRule.minSpend) {
+          shippingText = LINE_ICONS.check + ' <span>' + overseasRule.label + '海外寄送已達滿額門檻（' + formatMoney(overseasRule.minSpend, countryIso) + '），海外運費為 ' + feeText + '（依台幣 $800 即時匯率換算）。</span>';
+        } else {
+          const diffOverseas = overseasRule.minSpend - cartTotal;
+          shippingText = LINE_ICONS.alert + ' <span class="text-[#B91C1C] font-medium">' + overseasRule.label + '地區需消費滿 ' + formatMoney(overseasRule.minSpend, countryIso) + ' 才可海外寄送（還差 ' + formatMoney(diffOverseas, countryIso) + '；另收海外運費 ' + feeText + '）。</span>';
+        }
+      } else if (isStorePickup) {
         shippingText = LINE_ICONS.truck + ' <span>門市到店取貨：專屬免收運費禮遇（現省 NT$ 150）。</span>';
       } else if (cartTotal <= 0) {
         shippingText = LINE_ICONS.truck + ' <span>全館消費滿 NT$ 5,000 即享免運費（未達門檻加收 NT$ 150 運費）。</span>';
@@ -2272,7 +2336,7 @@
 
       
       let bdayGiftText = '';
-      if (isBirthdayMonth) {
+      if (!isOverseas && isBirthdayMonth) {
         bdayGiftText = cartTotal > 0
           ? LINE_ICONS.gift + ' <span>壽星專屬禮遇：購物車已自動免費帶入【妍之馨年度限定尊榮生日禮】。</span>'
           : LINE_ICONS.gift + ' <span>當月壽星福利：本月消費滿額即贈專屬生日禮與全月免運費。</span>';
@@ -2433,14 +2497,35 @@
     
     
     
-    function getMemberProductPrice(product, member) {
-      const regPrice = Number(product.price || 0);
-      if (!member) return regPrice;
+    function getProductCountryPricing(product, member) {
+      const iso = getMemberCountryIso(member);
       const isDis = isDistributorMember(member);
-      if (isDis) return Math.round(regPrice * 0.5); 
-      const isVip = member.memberType === 'VIP會員';
-      if (isVip) return Number(product.vipPrice || Math.round(regPrice * 0.85));
-      return regPrice;
+      const isVip = member && member.memberType === 'VIP會員';
+
+      if (iso !== 'TW' && Array.isArray(state.priceTable)) {
+        const pName = String(product.productName || '').trim();
+        const matched = state.priceTable.find(function(pt) {
+          return pt.countryCode === iso && pt.productName === pName;
+        });
+        if (matched) {
+          const retail = Number(matched.retailPrice || 0);
+          const vip = Math.round(retail * 0.85);
+          const dis = Number(matched.distributorPrice || 0);
+          const active = isDis && dis > 0 ? dis : (isVip ? vip : retail);
+          return { iso: iso, regPrice: retail, vipPrice: vip, disPrice: dis, activePrice: active };
+        }
+      }
+
+      const regPrice = Number(product.price || 0);
+      const vipPrice = Number(product.vipPrice || Math.round(regPrice * 0.85));
+      const disPrice = Math.round(regPrice * 0.5);
+      const activePrice = isDis ? disPrice : (isVip ? vipPrice : regPrice);
+      return { iso: iso, regPrice: regPrice, vipPrice: vipPrice, disPrice: disPrice, activePrice: activePrice };
+    }
+
+    
+    function getMemberProductPrice(product, member) {
+      return getProductCountryPricing(product, member).activePrice;
     }
 
     function getGroupedShelfZones() {
@@ -2552,29 +2637,27 @@
         const imgList = parseProductImages(firstVar.images, zone.mainTitle);
         const fallbackImg = makeMinimalistFallbackSvg(zone.mainTitle);
 
-        const prices = zone.variants.map(function(v) { return Number(v.price || 0); });
-        const minPrice = Math.min.apply(null, prices);
-        const minVipPrice = Math.min.apply(null, zone.variants.map(function(v) { return Number(v.vipPrice || Math.round(v.price * 0.85)); }));
-        const minDisPrice = Math.min.apply(null, zone.variants.map(function(v) { return Math.round(Number(v.price || 0) * 0.5); }));
+        const iso = getMemberCountryIso(m);
+        const pricingList = zone.variants.map(function(v) { return getProductCountryPricing(v, m); });
+        const minPrice = Math.min.apply(null, pricingList.map(function(p) { return p.regPrice; }));
+        const minVipPrice = Math.min.apply(null, pricingList.map(function(p) { return p.vipPrice; }));
+        const minDisPrice = Math.min.apply(null, pricingList.map(function(p) { return p.disPrice; }));
 
         let activeDisplayPrice = minPrice;
         let strikethroughHtml = '';
         if (isDisMember) {
-          
           activeDisplayPrice = minDisPrice;
           strikethroughHtml = 
-            '<div class="text-[10px] text-[#1E3A8A] font-semibold mt-0.5 font-sans">經銷 5 折價</div>' +
-            '<div class="text-[10px] text-[#9CA3AF] line-through font-sans">一般價 NT$ ' + minPrice.toLocaleString() + '</div>';
+            '<div class="text-[10px] text-[#1E3A8A] font-semibold mt-0.5 font-sans">' + (iso === 'TW' ? '經銷 5 折價' : '經銷專屬價') + '</div>' +
+            '<div class="text-[10px] text-[#9CA3AF] line-through font-sans">一般價 ' + formatMoney(minPrice, iso) + '</div>';
         } else if (isVipMember) {
-          
           activeDisplayPrice = minVipPrice;
           strikethroughHtml = 
             '<div class="text-[10px] text-[#047857] font-medium mt-0.5 font-sans">VIP 85 折價</div>' +
-            '<div class="text-[10px] text-[#9CA3AF] line-through font-sans">一般價 NT$ ' + minPrice.toLocaleString() + '</div>';
+            '<div class="text-[10px] text-[#9CA3AF] line-through font-sans">一般價 ' + formatMoney(minPrice, iso) + '</div>';
         } else {
-          
           activeDisplayPrice = minPrice;
-          strikethroughHtml = '<div class="text-[10px] text-[#6B7280] mt-0.5 font-sans">VIP 價 NT$ ' + minVipPrice.toLocaleString() + '</div>';
+          strikethroughHtml = '<div class="text-[10px] text-[#6B7280] mt-0.5 font-sans">VIP 價 ' + formatMoney(minVipPrice, iso) + '</div>';
         }
         const totalStock = zone.variants.reduce(function(acc, v) { return acc + Number(v.remainingQty || 0); }, 0);
         const specsSummary = zone.variants.map(function(v) { return (v.color ? v.color + '·' : '') + (v.spec || v.productName); }).join(' ／ ');
@@ -2589,7 +2672,7 @@
           '<div class="pt-3.5 pb-4 px-3 bg-white text-center flex flex-col items-center justify-center">' +
             '<h3 class="text-[13px] sm:text-sm font-normal text-[#262626] tracking-wide mb-1.5 group-hover:text-[#1D4ED8] transition-colors">' + zone.mainTitle + '</h3>' +
             '<div class="text-xs sm:text-[13px] font-semibold text-[#1D4ED8] tracking-wider font-sans">' +
-              'NT$ ' + activeDisplayPrice.toLocaleString() +
+              formatMoney(activeDisplayPrice, iso) +
               (zone.variants.length > 1 ? '<span class="text-[10px] font-normal text-[#6B7280] ml-1">起</span>' : '') +
             '</div>' +
             strikethroughHtml +
@@ -2753,40 +2836,32 @@
 
       const isDis = state.currentMember && isDistributorMember(state.currentMember);
 
-      
-      const regPrice = Number(selectedVar.price || 0);                          
-      const vipPrice = Number(selectedVar.vipPrice || Math.round(regPrice * 0.85)); 
-      const disPrice = Math.round(regPrice * 0.5);                                 
+      const pricing = getProductCountryPricing(selectedVar, state.currentMember);
+      const iso = pricing.iso;
 
-      const activePrice = getMemberProductPrice(selectedVar, state.currentMember);
-
-      
       const regPriceEl = document.getElementById('modalRegPriceText');
-      if (regPriceEl) regPriceEl.textContent = 'NT$ ' + regPrice.toLocaleString();
+      if (regPriceEl) regPriceEl.textContent = formatMoney(pricing.regPrice, iso);
 
-      
       const vipPriceEl = document.getElementById('modalVipPriceText');
-      if (vipPriceEl) vipPriceEl.textContent = 'NT$ ' + vipPrice.toLocaleString();
+      if (vipPriceEl) vipPriceEl.textContent = formatMoney(pricing.vipPrice, iso);
 
-      
       const disRowEl = document.getElementById('modalDisPriceRow');
       const disPriceEl = document.getElementById('modalDisPriceText');
       if (disRowEl && disPriceEl) {
         if (isDis) {
-          disPriceEl.textContent = 'NT$ ' + disPrice.toLocaleString();
+          disPriceEl.textContent = formatMoney(pricing.disPrice, iso);
           disRowEl.classList.remove('hidden');
         } else {
           disRowEl.classList.add('hidden');
         }
       }
 
-      
       const activePriceEl = document.getElementById('modalActivePrice');
       const activeLabelEl = document.getElementById('modalActivePriceLabel');
-      if (activePriceEl) activePriceEl.textContent = 'NT$ ' + activePrice.toLocaleString();
+      if (activePriceEl) activePriceEl.textContent = formatMoney(pricing.activePrice, iso);
       if (activeLabelEl) {
         activeLabelEl.textContent = isDis 
-          ? '當前適用結算價（經銷商 5 折）' 
+          ? (iso === 'TW' ? '當前適用結算價（經銷商 5 折）' : '當前適用結算價（經銷專屬價）')
           : (isVip ? '當前適用結算價（VIP 85 折）' : '當前適用結算價（一般標準價）');
       }
       
@@ -2867,10 +2942,13 @@
       const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
 
       
+      const countryIso = getMemberCountryIso(state.currentMember);
+      const overseasRule = OVERSEAS_RULES[countryIso];
+      const isOverseas = (countryIso !== 'TW');
       const currentMonth = new Date().getMonth() + 1;
       const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
-      const isStorePickup = state.currentDeliveryMode === 'store';
-      const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth);
+      const isStorePickup = !isOverseas && state.currentDeliveryMode === 'store';
+      const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth, countryIso);
       const finalTotal = subtotal > 0 ? (subtotal + shippingFee) : 0;
 
       document.getElementById('headerCartCount').textContent = String(totalQty);
@@ -2879,19 +2957,22 @@
       const isDisMember = state.currentMember && isDistributorMember(state.currentMember);
       document.getElementById('cartSummaryMemberTier').textContent =
         isDisMember
-          ? '經銷商 5折 專屬批發價'
+          ? (isOverseas ? '海外經銷專屬批發價' : '經銷商 5折 專屬批發價')
           : (state.currentMember && state.currentMember.memberType === 'VIP會員'
               ? 'VIP 會員 85 折優惠價'
               : '一般會員標準價');
 
       const subtotalEl = document.getElementById('cartSummarySubtotal');
-      if (subtotalEl) subtotalEl.textContent = 'NT$ ' + subtotal.toLocaleString();
+      if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal, countryIso);
 
       const shippingEl = document.getElementById('cartSummaryShipping');
       if (shippingEl) {
         if (subtotal <= 0) {
-          shippingEl.textContent = 'NT$ 0';
+          shippingEl.textContent = formatMoney(0, countryIso);
           shippingEl.className = 'font-mono text-[#111111]';
+        } else if (isOverseas) {
+          shippingEl.textContent = '+ ' + formatMoney(shippingFee, countryIso) + ' (海外運費 TWD 800 換算)';
+          shippingEl.className = 'font-mono text-[#B91C1C] font-medium';
         } else if (isStorePickup) {
           shippingEl.textContent = 'NT$ 0 (到店取貨免運)';
           shippingEl.className = 'font-mono text-[#15803D] font-medium';
@@ -2904,7 +2985,7 @@
         }
       }
 
-      document.getElementById('cartSummaryTotalPrice').textContent = 'NT$ ' + finalTotal.toLocaleString();
+      document.getElementById('cartSummaryTotalPrice').textContent = formatMoney(finalTotal, countryIso);
 
       renderVipAndBirthdayBanners();
 
@@ -2912,7 +2993,7 @@
       listContainer.innerHTML = '';
 
       
-      if (isBirthdayMonth && cartRows.length > 0) {
+      if (!isOverseas && isBirthdayMonth && cartRows.length > 0) {
         const giftEl = document.createElement('div');
         giftEl.className = 'p-3.5 border border-[#86EFAC] bg-[#F0FDF4] flex items-center justify-between gap-3';
         giftEl.innerHTML =
@@ -2949,7 +3030,14 @@
         return;
       }
 
-      document.getElementById('proceedToCheckoutBtn').disabled = false;
+      const proceedBtn = document.getElementById('proceedToCheckoutBtn');
+      if (isOverseas && overseasRule && subtotal < overseasRule.minSpend) {
+        proceedBtn.disabled = true;
+        proceedBtn.textContent = '未達海外滿額門檻（需滿 ' + formatMoney(overseasRule.minSpend, countryIso) + '）';
+      } else {
+        proceedBtn.disabled = false;
+        proceedBtn.textContent = '填寫收件';
+      }
 
       cartRows.forEach(function(item) {
         const imgs = parseProductImages(item.images, item.productName);
@@ -3018,11 +3106,13 @@
         return;
       }
 
+      const countryIso = getMemberCountryIso(state.currentMember);
+      const isOverseas = (countryIso !== 'TW');
       const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
       const currentMonth = new Date().getMonth() + 1;
-      const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
-      const isStorePickup = state.currentDeliveryMode === 'store';
-      const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth);
+      const isBirthdayMonth = !isOverseas && state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
+      const isStorePickup = !isOverseas && state.currentDeliveryMode === 'store';
+      const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth, countryIso);
       const finalTotal = subtotal > 0 ? (subtotal + shippingFee) : 0;
 
       
@@ -3083,15 +3173,19 @@
       summaryBar.className = 'p-3.5 hairline-border bg-white text-xs space-y-1';
       summaryBar.innerHTML =
         '<div class="flex justify-between text-[#666666]">' +
-          '<span>商品小計</span><span class="font-mono text-[#111111]">NT$ ' + subtotal.toLocaleString() + '</span>' +
+          '<span>商品小計</span><span class="font-mono text-[#111111]">' + formatMoney(subtotal, countryIso) + '</span>' +
         '</div>' +
         '<div class="flex justify-between text-[#666666]">' +
           '<span>配送運費</span><span class="font-mono ' + (shippingFee === 0 ? 'text-[#15803D] font-medium' : 'text-[#B91C1C] font-medium') + '">' +
-            (subtotal <= 0 ? 'NT$ 0' : (isStorePickup ? 'NT$ 0 (到店取貨免運)' : (shippingFee === 0 ? (isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)') : '+ NT$ 150'))) +
+            (subtotal <= 0
+              ? formatMoney(0, countryIso)
+              : (isOverseas
+                  ? ('+ ' + formatMoney(shippingFee, countryIso) + ' (海外運費 TWD 800 換算)')
+                  : (isStorePickup ? 'NT$ 0 (到店取貨免運)' : (shippingFee === 0 ? (isBirthdayMonth ? 'NT$ 0 (壽星全月免運)' : 'NT$ 0 (滿額免運)') : '+ NT$ 150')))) +
           '</span>' +
         '</div>' +
         '<div class="flex justify-between font-medium text-[#111111] pt-1.5 hairline-t">' +
-          '<span>應付總額</span><span class="font-mono text-sm text-[#1D4ED8]">NT$ ' + finalTotal.toLocaleString() + '</span>' +
+          '<span>應付總額</span><span class="font-mono text-sm text-[#1D4ED8]">' + formatMoney(finalTotal, countryIso) + '</span>' +
         '</div>';
       container.appendChild(summaryBar);
     }
@@ -3205,7 +3299,41 @@
         foot1.classList.add('hidden');
         foot2.classList.remove('hidden');
 
+        applyOverseasDeliveryConstraints();
         fillDefaultRecipientInfo();
+      }
+    }
+
+    function applyOverseasDeliveryConstraints() {
+      const countryIso = getMemberCountryIso(state.currentMember);
+      const isOverseas = (countryIso !== 'TW');
+      const btnHome = document.getElementById('deliveryModeHome');
+      const btn711 = document.getElementById('deliveryMode711');
+      const btnStore = document.getElementById('deliveryModeStore');
+      const storeBox = document.getElementById('storePickupOptionBox');
+      const payOnSiteCb = document.getElementById('payOnSiteCheckbox');
+      const addrInput = document.getElementById('shipRecipientAddress');
+      const addrDropdown = document.getElementById('shipAddressDropdownList');
+
+      if (isOverseas) {
+        if (btn711) btn711.classList.add('hidden');
+        if (btnStore) btnStore.classList.add('hidden');
+        if (storeBox) storeBox.classList.add('hidden');
+        if (payOnSiteCb) payOnSiteCb.checked = false;
+        if (addrDropdown) addrDropdown.classList.add('hidden');
+        state.currentDeliveryMode = 'home';
+        if (btnHome) {
+          btnHome.textContent = '海外國際寄送';
+          btnHome.className = 'px-2 py-0.5 border border-[#262626] bg-[#353535] text-white transition-colors';
+        }
+        if (addrInput) {
+          addrInput.readOnly = false;
+          addrInput.placeholder = '請輸入完整海外收件國家、城市、街道地址與郵遞區號';
+        }
+      } else {
+        if (btn711) btn711.classList.remove('hidden');
+        if (btnStore) btnStore.classList.remove('hidden');
+        if (btnHome) btnHome.textContent = '宅配到府';
       }
     }
 
@@ -3671,6 +3799,8 @@
           state.members = res.data.members || [];
           state.orders = res.data.orders || [];
           state.returns = res.data.returns || [];
+          if (Array.isArray(res.data.priceTable)) state.priceTable = res.data.priceTable;
+          if (res.data.exchangeRates) state.exchangeRates = res.data.exchangeRates;
 
           
           function isDisMemberActive(m) {
@@ -3692,7 +3822,10 @@
             if (!candidates || candidates.length === 0) return null;
             const disRecord = candidates.find(function(m) { return isDisMemberActive(m); });
             if (disRecord) return disRecord; 
-            const memRecord = candidates.find(function(m) { return String(m.memberId || '').toUpperCase().startsWith('MEM'); });
+            const memRecord = candidates.find(function(m) {
+              const mid = String(m.memberId || '').toUpperCase();
+              return mid.startsWith('MEM') || /^[A-Z]{2}-MEM-/.test(mid);
+            });
             return memRecord || candidates[0];
           }
 
@@ -3807,6 +3940,9 @@
           return;
         }
 
+        const selectedCountryObj = GOOGLE_ITU_COUNTRIES.find(function(c) { return c.code === countryCode; });
+        const countryIso = (selectedCountryObj && selectedCountryObj.iso) ? selectedCountryObj.iso : 'TW';
+
         const btn = document.getElementById('registerSubmitBtn');
         try {
           const res = await runWithButtonProgress(btn, null, '立即註冊', function() {
@@ -3814,6 +3950,7 @@
               name: name,
               memberType: '一般會員',
               phone: fullPhone,
+              countryIso: countryIso,
               birthday: birthdaySlash,
               lineId: referrer,
               email: email
@@ -4488,13 +4625,21 @@
           return;
         }
 
+        const countryIso = getMemberCountryIso(state.currentMember);
+        const overseasRule = OVERSEAS_RULES[countryIso];
+        if (countryIso !== 'TW' && overseasRule && subtotal < overseasRule.minSpend) {
+          const diffAmt = overseasRule.minSpend - subtotal;
+          setInlineNotice('checkoutStatusNotice', overseasRule.label + '地區需消費滿 ' + formatMoney(overseasRule.minSpend, countryIso) + ' 才可海外寄送（還差 ' + formatMoney(diffAmt, countryIso) + '）', 'red');
+          return;
+        }
+
         
-        const isStorePickup = state.currentDeliveryMode === 'store';
+        const isStorePickup = (countryIso === 'TW') && state.currentDeliveryMode === 'store';
         const isPayOnSite = isStorePickup && document.getElementById('payOnSiteCheckbox') && document.getElementById('payOnSiteCheckbox').checked;
 
         const currentMonth = new Date().getMonth() + 1;
-        const isBirthdayMonth = state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
-        const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth);
+        const isBirthdayMonth = (countryIso === 'TW') && state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
+        const shippingFee = isStorePickup ? 0 : calculateShippingFee(subtotal, isBirthdayMonth, countryIso);
         const totalAmount = subtotal + shippingFee;
 
         
