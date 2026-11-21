@@ -235,9 +235,6 @@
       </div>
 
       
-      <div id="authInlineNotice" class="hidden mb-5 p-3 hairline-border bg-[#FAFAFA] text-xs leading-relaxed"></div>
-
-      
       <div id="loginFormContainer" class="space-y-4">
         <form id="loginForm" class="space-y-4">
           <div>
@@ -287,7 +284,8 @@
 
         <div>
           <label class="block text-xs text-[#555555] mb-1.5">推薦人編號</label>
-          <input type="text" id="regReferrer" placeholder="請輸入推薦人編號或電話（選填）" class="input-minimal" />
+          <input type="text" id="regReferrer" placeholder="請輸入 TW- 開頭推薦人編號（若無填寫預設為妍之馨總部 TW-NAMIS）" class="input-minimal" />
+          <p class="mt-1 text-[11px] text-[#6B7280]">* 若無填寫預設為妍之馨總部 TW-NAMIS；若有填寫須為台灣 TW- 開頭編號</p>
         </div>
 
         <div>
@@ -301,6 +299,9 @@
           </button>
         </div>
       </form>
+
+      
+      <div id="authInlineNotice" class="hidden mt-5 p-3 hairline-border bg-[#FAFAFA] text-xs leading-relaxed"></div>
     </div>
   </section>
 
@@ -853,11 +854,14 @@
         <div id="checkoutStatusNotice" class="text-xs text-center hidden"></div>
 
         <div id="cartStep1Footer" class="space-y-2">
-          <button type="button" id="proceedToCheckoutBtn" class="w-full py-3.5 text-xs tracking-[0.16em] font-medium btn-minimal-dark">
-            填寫收件
-          </button>
           <button type="button" id="continueShoppingBtn" class="w-full py-3 text-xs tracking-[0.16em] font-medium btn-minimal-outline">
             繼續選購
+          </button>
+          <button type="button" id="proceedToCheckoutBtn" title="下一步" aria-label="下一步" class="w-full py-3.5 btn-minimal-dark flex items-center justify-center">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M5 12h14"/>
+              <path d="m12 5 7 7-7 7"/>
+            </svg>
           </button>
         </div>
 
@@ -2272,7 +2276,7 @@
       if (!m) return;
 
       const cartRows = getActiveCartRows();
-      const cartTotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const cartTotal = cartRows.reduce(function(acc, r) { return acc + getOrderItemDisplaySubtotal(r); }, 0);
       const isDis = isDistributorMember(m);
       const isVip = m.memberType === 'VIP會員';
       const vipThreshold = (typeof VIP_UPGRADE_THRESHOLD !== 'undefined') ? VIP_UPGRADE_THRESHOLD : 28000;
@@ -2890,7 +2894,7 @@
             '</div>' +
           '</div>' +
           '<div class="text-right shrink-0 ml-3">' +
-            '<div class="text-xs font-mono font-medium">NT$ ' + vPrice.toLocaleString() + '</div>' +
+            '<div class="text-xs font-mono font-medium">' + formatMoney(vPrice, iso) + '</div>' +
             '<div class="text-[10px] ' + (isCurrent ? 'text-neutral-300' : 'text-[#777777]') + ' font-mono">剩餘 ' + v.remainingQty + ' 件</div>' +
           '</div>';
         itemBtn.addEventListener('click', function() {
@@ -2904,6 +2908,21 @@
     
     
     
+    
+    function getOrderItemDisplaySubtotal(item) {
+      if (item && item.fxSubtotal !== null && item.fxSubtotal !== undefined && !isNaN(Number(item.fxSubtotal))) {
+        return Number(item.fxSubtotal);
+      }
+      return Number((item && item.subtotal) || 0);
+    }
+    function getOrderItemDisplayUnitPrice(item) {
+      if (item && item.fxUnitPrice !== null && item.fxUnitPrice !== undefined && !isNaN(Number(item.fxUnitPrice))) {
+        return Number(item.fxUnitPrice);
+      }
+      const qty = Number((item && item.buyQty) || 0);
+      return qty > 0 ? Math.round(getOrderItemDisplaySubtotal(item) / qty) : Number((item && item.price) || 0);
+    }
+
     function getActiveCartRows() {
       if (!state.currentMember) return [];
       return state.orders.filter(function(o) {
@@ -2942,7 +2961,7 @@
     function renderCartDrawer() {
       const cartRows = getActiveCartRows();
       const totalQty = cartRows.reduce(function(acc, r) { return acc + Number(r.buyQty || 0); }, 0);
-      const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const subtotal = cartRows.reduce(function(acc, r) { return acc + getOrderItemDisplaySubtotal(r); }, 0);
 
       
       const countryIso = getMemberCountryIso(state.currentMember);
@@ -3039,7 +3058,7 @@
         proceedBtn.textContent = '未達海外滿額門檻（需滿 ' + formatMoney(overseasRule.minSpend, countryIso) + '）';
       } else {
         proceedBtn.disabled = false;
-        proceedBtn.textContent = '填寫收件';
+        proceedBtn.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
       }
 
       cartRows.forEach(function(item) {
@@ -3049,7 +3068,7 @@
           return p.shelfCode === item.shelfCode && p.productCode === item.productCode && p.spec === item.spec;
         });
         const productRowId = matchedShelf ? matchedShelf._rowId : null;
-        const unitPrice = Number(item.buyQty) > 0 ? Math.round(Number(item.subtotal) / Number(item.buyQty)) : Number(item.price);
+        const unitPrice = getOrderItemDisplayUnitPrice(item);
 
         const rowEl = document.createElement('div');
         rowEl.className = 'p-4 hairline-border bg-white flex gap-4 items-start';
@@ -3057,7 +3076,7 @@
           '<div class="flex-1 min-w-0">' +
             '<h4 class="text-xs font-medium text-[#111111] truncate">' + item.productName + '</h4>' +
             '<div class="text-[11px] text-[#666666] mt-0.5">' +
-              '顏色：' + (item.color || '-') + '｜規格：' + (item.spec || '-') + '｜單價 NT$ ' + unitPrice.toLocaleString() +
+              '顏色：' + (item.color || '-') + '｜規格：' + (item.spec || '-') + '｜單價 ' + formatMoney(unitPrice, countryIso) +
             '</div>' +
             '<div class="mt-3 flex items-center justify-between">' +
               '<div class="flex items-center hairline-border">' +
@@ -3066,7 +3085,7 @@
                 '<button type="button" data-action="plus" aria-label="增加數量" class="w-7 h-7 flex items-center justify-center text-xs hover:bg-[#FAFAFA]">+</button>' +
               '</div>' +
               '<div class="flex items-center space-x-3">' +
-                '<span class="text-xs font-mono font-medium">NT$ ' + Number(item.subtotal).toLocaleString() + '</span>' +
+                '<span class="text-xs font-mono font-medium">' + formatMoney(getOrderItemDisplaySubtotal(item), countryIso) + '</span>' +
                 '<button type="button" data-action="remove" title="移除商品" aria-label="移除商品" class="w-7 h-7 hairline-border flex items-center justify-center text-[#666666] hover:text-[#B91C1C] hover:border-[#B91C1C]">' +
                   '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
                     '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
@@ -3111,7 +3130,7 @@
 
       const countryIso = getMemberCountryIso(state.currentMember);
       const isOverseas = (countryIso !== 'TW');
-      const subtotal = cartRows.reduce(function(acc, r) { return acc + Number(r.subtotal || 0); }, 0);
+      const subtotal = cartRows.reduce(function(acc, r) { return acc + getOrderItemDisplaySubtotal(r); }, 0);
       const currentMonth = new Date().getMonth() + 1;
       const isBirthdayMonth = !isOverseas && state.currentMember && (getMemberBirthMonth(state.currentMember) === currentMonth);
       const isStorePickup = !isOverseas && state.currentDeliveryMode === 'store';
@@ -3167,7 +3186,7 @@
               '<div class="text-[11px] text-[#666666]">顏色：' + (item.color || '-') + '｜規格：' + (item.spec || '-') + '｜數量：' + item.buyQty + ' 件</div>' +
             '</div>' +
           '</div>' +
-          '<div class="text-xs font-mono font-medium text-[#111111]">NT$ ' + Number(item.subtotal).toLocaleString() + '</div>';
+          '<div class="text-xs font-mono font-medium text-[#111111]">' + formatMoney(getOrderItemDisplaySubtotal(item), countryIso) + '</div>';
         container.appendChild(el);
       });
 
@@ -3224,6 +3243,8 @@
       } else if (targetItem) {
         targetItem.buyQty = newAbsoluteQty;
         targetItem.subtotal = unitPrice * newAbsoluteQty;
+        targetItem.fxUnitPrice = unitPrice;
+        targetItem.fxSubtotal = unitPrice * newAbsoluteQty;
       }
 
       
@@ -3417,7 +3438,8 @@
         const isReturned = statusMeta.isReturned;
         const isReceived = currentStage === 5 && !isCancelled;
 
-        const totalOrderAmount = order.items.reduce(function(acc, i) { return acc + Number(i.subtotal || 0); }, 0);
+        const orderIso = getMemberCountryIso(state.currentMember);
+        const totalOrderAmount = order.items.reduce(function(acc, i) { return acc + getOrderItemDisplaySubtotal(i); }, 0);
         const totalOrderQty = order.items.reduce(function(acc, i) { return acc + Number(i.buyQty || 0); }, 0);
 
         const card = document.createElement('div');
@@ -3476,7 +3498,7 @@
           const imgs = parseProductImages(item.images, item.productName);
           const fallbackImg = makeMinimalistFallbackSvg(item.productName);
           const retLog = orderReturns.find(function(r) { return r.productCode === item.productCode; }) || null;
-          const unitPrice = Number(item.buyQty) > 0 ? Math.round(Number(item.subtotal) / Number(item.buyQty)) : Number(item.price);
+          const unitPrice = getOrderItemDisplayUnitPrice(item);
 
           let retHtml = '';
           if (retLog) {
@@ -3507,13 +3529,13 @@
                 '<div>' +
                   '<div class="text-xs font-medium text-[#111111]">' + item.productName + '</div>' +
                   '<div class="text-[11px] text-[#666666] mt-0.5">' +
-                    '顏色：' + (item.color || '-') + '｜規格：' + (item.spec || '-') + '｜數量：' + item.buyQty + ' 件 × NT$ ' + unitPrice.toLocaleString() +
+                    '顏色：' + (item.color || '-') + '｜規格：' + (item.spec || '-') + '｜數量：' + item.buyQty + ' 件 × ' + formatMoney(unitPrice, orderIso) +
                   '</div>' +
                   retHtml +
                 '</div>' +
               '</div>' +
               '<div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">' +
-                '<div class="text-sm font-mono font-medium text-[#111111]">NT$ ' + Number(item.subtotal).toLocaleString() + '</div>' +
+                '<div class="text-sm font-mono font-medium text-[#111111]">' + formatMoney(getOrderItemDisplaySubtotal(item), orderIso) + '</div>' +
                 actionBtnHtml +
               '</div>' +
             '</div>';
@@ -3553,7 +3575,7 @@
             '<div class="flex items-center space-x-3">' +
               '<div class="text-right">' +
                 '<div class="text-[11px] text-[#666666]">共 ' + totalOrderQty + ' 件商品</div>' +
-                '<div class="text-base font-mono font-medium text-[#111111]">NT$ ' + totalOrderAmount.toLocaleString() + '</div>' +
+                '<div class="text-base font-mono font-medium text-[#111111]">' + formatMoney(totalOrderAmount, orderIso) + '</div>' +
               '</div>' +
               '<button type="button" data-toggle-items="' + order.orderNo + '" title="展開或收合訂單明細" aria-label="展開或收合訂單明細" class="w-9 h-9 btn-minimal-outline flex items-center justify-center">' +
                 '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 12 15 18 9"/></svg>' +
@@ -3935,7 +3957,7 @@
         const fullPhone = '(' + countryCode + ')' + rawPhone;
         const rawBirthday = document.getElementById('regBirthday').value;
         const birthdaySlash = formatBirthdayToSlash(rawBirthday);
-        const referrer = document.getElementById('regReferrer').value.trim();
+        const rawReferrer = document.getElementById('regReferrer').value.trim().toUpperCase();
         const email = document.getElementById('regEmail').value.trim();
 
         if (!name || !rawPhone || !birthdaySlash) {
@@ -3945,6 +3967,24 @@
 
         const selectedCountryObj = GOOGLE_ITU_COUNTRIES.find(function(c) { return c.code === countryCode; });
         const countryIso = (selectedCountryObj && selectedCountryObj.iso) ? selectedCountryObj.iso : 'TW';
+
+        
+        if (countryIso !== 'TW') {
+          const hasCountryPrice = Array.isArray(state.priceTable) && state.priceTable.some(function(pt) {
+            return pt.countryCode === countryIso;
+          });
+          if (!hasCountryPrice) {
+            showAuthAlert('本國目前尚未開放購物服務。', 'red');
+            return;
+          }
+        }
+
+        
+        if (rawReferrer && !/^TW-/.test(rawReferrer)) {
+          showAuthAlert('推薦人編號必須為台灣 TW- 開頭，否則無法註冊進入商城。', 'red');
+          return;
+        }
+        const referrer = rawReferrer || 'TW-NAMIS';
 
         const btn = document.getElementById('registerSubmitBtn');
         try {
@@ -4264,8 +4304,12 @@
         if (existingItem) {
           existingItem.buyQty = Number(existingItem.buyQty || 0) + qty;
           existingItem.subtotal = activePrice * existingItem.buyQty;
+          existingItem.fxUnitPrice = activePrice;
+          existingItem.fxSubtotal = activePrice * existingItem.buyQty;
         } else {
           state.orders.push({
+            fxUnitPrice: activePrice,
+            fxSubtotal: activePrice * qty,
             _rowId: Date.now(), 
             shopTime: formatNowTimestamp('-').formatted,
             category: selectedVar.category,
@@ -4625,7 +4669,7 @@
         }
 
         const cartRows = getActiveCartRows();
-        const subtotal = cartRows.reduce((acc, r) => acc + Number(r.subtotal || 0), 0);
+        const subtotal = cartRows.reduce((acc, r) => acc + getOrderItemDisplaySubtotal(r), 0);
         if (subtotal <= 0) {
           setInlineNotice('checkoutStatusNotice', '購物車結帳金額異常，請重新確認商品', 'red');
           return;
@@ -4688,8 +4732,11 @@
             renderAllViews();
 
             if (resData.url) {
-              const displayTotal = Number(resData.totalAmount || totalAmount).toLocaleString();
-              alert(`訂單建立成功！\n單號：${resData.orderNo}\n結帳總金額：NT$ ${displayTotal}\n即將為您跳轉至 PayUni 金流付款頁面...`);
+              const displayMoney = formatMoney(Number(resData.totalAmount || totalAmount), countryIso);
+              const twdLine = (countryIso !== 'TW' && resData.twdAmount)
+                ? `\n（刷卡將依即時匯率換算為 NT$ ${Number(resData.twdAmount).toLocaleString()}）`
+                : '';
+              alert(`訂單建立成功！\n單號：${resData.orderNo}\n結帳總金額：${displayMoney}${twdLine}\n即將為您跳轉至 PayUni 金流付款頁面...`);
               if (isGasNativeEnv() && window.top) {
                 window.top.location.href = resData.url;
               } else {
