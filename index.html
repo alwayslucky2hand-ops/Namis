@@ -732,12 +732,6 @@
       </div>
 
       
-      <div class="px-6 py-3 hairline-b bg-white space-y-1">
-        <div id="drawerVipDiffBanner" class="text-xs msg-black leading-relaxed"></div>
-        <div id="drawerBirthdayBanner" class="text-xs msg-green font-medium hidden"></div>
-      </div>
-
-      
       <div class="grid grid-cols-2 hairline-b text-xs">
         <button type="button" id="cartStep1Tab" class="py-2.5 text-center font-medium bg-[#111111] text-white">
           1. 購物車
@@ -850,11 +844,20 @@
           </div>
         </div>
 
+        
+        <div class="p-3 hairline-border bg-white space-y-1">
+          <div id="drawerVipDiffBanner" class="text-xs msg-black leading-relaxed"></div>
+          <div id="drawerBirthdayBanner" class="text-xs msg-green font-medium hidden"></div>
+        </div>
+
         <div id="checkoutStatusNotice" class="text-xs text-center hidden"></div>
 
-        <div id="cartStep1Footer">
+        <div id="cartStep1Footer" class="space-y-2">
           <button type="button" id="proceedToCheckoutBtn" class="w-full py-3.5 text-xs tracking-[0.16em] font-medium btn-minimal-dark">
             填寫收件
+          </button>
+          <button type="button" id="continueShoppingBtn" class="w-full py-3 text-xs tracking-[0.16em] font-medium btn-minimal-outline">
+            繼續選購
           </button>
         </div>
 
@@ -2915,7 +2918,7 @@
       });
       const map = new Map();
       nonCart.forEach(function(row) {
-        const key = row.orderNo || ('ORDER-ROW-' + row._rowId);
+        const key = (row.orderNo && String(row.orderNo).trim()) ? String(row.orderNo).trim() : ('BUY-ROW-' + row._rowId);
         if (!map.has(key)) {
           map.set(key, {
             orderNo: key,
@@ -4348,6 +4351,9 @@
 
       
       document.getElementById('closeCartDrawerBtn').addEventListener('click', () => {
+        document.getElementById('cartDrawerBackdrop').classList.add('hidden');
+      });
+      document.getElementById('continueShoppingBtn').addEventListener('click', () => {
         document.getElementById('cartDrawerBackdrop').classList.add('hidden');
       });
 
