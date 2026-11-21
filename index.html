@@ -3177,6 +3177,10 @@
       cartRows.forEach(function(item) {
         const imgs = parseProductImages(item.images, item.productName);
         const fallbackImg = makeMinimalistFallbackSvg(item.productName);
+        const matchedShelf = state.shelfProducts.find(function(p) {
+          return p.shelfCode === item.shelfCode && p.productCode === item.productCode && p.spec === item.spec;
+        });
+        const productRowId = matchedShelf ? matchedShelf._rowId : null;
         const el = document.createElement('div');
         el.className = 'p-3.5 hairline-border bg-[#FAFAFA] flex items-center justify-between gap-4';
         el.innerHTML = '<div class="flex items-center space-x-3">' +
@@ -3186,7 +3190,20 @@
               '<div class="text-[11px] text-[#666666]">顏色：' + (item.color || '-') + '｜規格：' + (item.spec || '-') + '｜數量：' + item.buyQty + ' 件</div>' +
             '</div>' +
           '</div>' +
-          '<div class="text-xs font-mono font-medium text-[#111111]">' + formatMoney(getOrderItemDisplaySubtotal(item), countryIso) + '</div>';
+          '<div class="flex items-center space-x-3 shrink-0">' +
+            '<div class="text-xs font-mono font-medium text-[#111111]">' + formatMoney(getOrderItemDisplaySubtotal(item), countryIso) + '</div>' +
+            '<button type="button" data-member-remove-cart title="取消選購" aria-label="取消選購" class="w-7 h-7 hairline-border bg-white flex items-center justify-center text-[#666666] hover:text-[#B91C1C] hover:border-[#B91C1C] transition-colors">' +
+              '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+                '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+              '</svg>' +
+            '</button>' +
+          '</div>';
+        const removeBtn = el.querySelector('[data-member-remove-cart]');
+        if (removeBtn && productRowId) {
+          removeBtn.addEventListener('click', function() {
+            updateCartItemQty(productRowId, 0, removeBtn);
+          });
+        }
         container.appendChild(el);
       });
 
@@ -3222,12 +3239,6 @@
       if (!targetProduct) return;
 
       
-      if (newAbsoluteQty > Number(targetProduct.remainingQty || 0)) {
-        showToast('選購數量超過目前架上剩餘庫存（' + targetProduct.remainingQty + ' 件）', 'error');
-        return;
-      }
-
-      
       const unitPrice = getMemberProductPrice(targetProduct, state.currentMember);
 
       let targetItem = state.orders.find(function(o) {
@@ -3237,6 +3248,16 @@
           o.productCode === targetProduct.productCode &&
           o.spec === targetProduct.spec;
       });
+
+      const oldQty = targetItem ? Number(targetItem.buyQty || 0) : 0;
+      const diffQty = newAbsoluteQty - oldQty;
+
+      
+      if (diffQty > 0 && diffQty > Number(targetProduct.remainingQty || 0)) {
+        showToast('選購數量超過目前架上剩餘庫存（' + targetProduct.remainingQty + ' 件）', 'error');
+        return;
+      }
+      targetProduct.remainingQty = Math.max(0, Number(targetProduct.remainingQty || 0) - diffQty);
 
       if (newAbsoluteQty <= 0) {
         state.orders = state.orders.filter(function(o) { return o !== targetItem; });
@@ -3280,6 +3301,7 @@
           if (res.status === 'success' && res.data && res.data.orders) {
             
             if (!cartSyncDebounceTimers[productRowId]) {
+              if (Array.isArray(res.data.shelfProducts)) state.shelfProducts = res.data.shelfProducts;
               state.orders = res.data.orders;
               renderCartDrawer();
               renderMemberCenterCart();
